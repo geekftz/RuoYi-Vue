@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RuoYi-Vue v3.9.2 完整项目技术吃透文档</title>
+<style>
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --primary-light: #dbeafe;
+  --bg: #f8fafc;
+  --bg-card: #ffffff;
+  --text: #1e293b;
+  --text-light: #64748b;
+  --border: #e2e8f0;
+  --code-bg: #1e293b;
+  --code-text: #e2e8f0;
+  --accent: #f59e0b;
+  --success: #10b981;
+  --danger: #ef4444;
+  --sidebar-w: 300px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; background:var(--bg); color:var(--text); line-height:1.8; font-size:15px; }
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:#94a3b8; }
+.layout { display:flex; min-height:100vh; }
+.sidebar { width:var(--sidebar-w); position:fixed; top:0; left:0; bottom:0; background:#0f172a; color:#cbd5e1; overflow-y:auto; z-index:100; transition:transform .3s; }
+.sidebar-header { padding:24px 20px 16px; border-bottom:1px solid #1e293b; }
+.sidebar-header h1 { font-size:18px; color:#fff; font-weight:700; }
+.sidebar-header .ver { font-size:12px; color:var(--accent); margin-top:4px; }
+.sidebar-header .sub { font-size:12px; color:#64748b; margin-top:2px; }
+.search-box { padding:12px 20px; }
+.search-box input { width:100%; padding:8px 12px; background:#1e293b; border:1px solid #334155; border-radius:6px; color:#cbd5e1; font-size:13px; outline:none; }
+.search-box input:focus { border-color:var(--primary); }
+.search-box input::placeholder { color:#475569; }
+.nav { padding:8px 0; }
+.nav-section { margin-bottom:4px; }
+.nav-section-title { padding:8px 20px; font-size:12px; font-weight:600; color:#475569; text-transform:uppercase; letter-spacing:.5px; }
+.nav-item { display:block; padding:7px 20px 7px 36px; font-size:13px; color:#94a3b8; text-decoration:none; transition:all .15s; border-left:2px solid transparent; cursor:pointer; }
+.nav-item:hover { color:#fff; background:#1e293b; border-left-color:var(--primary); }
+.nav-item.active { color:#fff; background:#1e293b; border-left-color:var(--accent); }
+.main { margin-left:var(--sidebar-w); flex:1; padding:0; }
+.content { max-width:960px; margin:0 auto; padding:40px 32px 80px; }
+.content section { margin-bottom:48px; scroll-margin-top:20px; }
+h2 { font-size:26px; font-weight:700; color:var(--text); margin-bottom:16px; padding-bottom:12px; border-bottom:3px solid var(--primary); display:flex; align-items:center; gap:8px; }
+h2 .ch-num { background:var(--primary); color:#fff; width:36px; height:36px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; font-size:16px; }
+h3 { font-size:20px; font-weight:600; color:var(--text); margin:28px 0 12px; padding-left:12px; border-left:4px solid var(--accent); }
+h4 { font-size:16px; font-weight:600; color:var(--text); margin:20px 0 8px; }
+p { margin-bottom:12px; color:var(--text); }
+ul, ol { margin:8px 0 16px 20px; }
+li { margin-bottom:6px; }
+code { background:var(--primary-light); color:var(--primary-dark); padding:2px 6px; border-radius:4px; font-family:'Fira Code', 'SF Mono', Consolas, monospace; font-size:13px; }
+pre { background:var(--code-bg); color:var(--code-text); padding:16px 20px; border-radius:8px; overflow-x:auto; margin:12px 0; font-size:13px; line-height:1.6; }
+pre code { background:none; color:inherit; padding:0; }
+table { width:100%; border-collapse:collapse; margin:12px 0; background:var(--bg-card); border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+th { background:var(--primary); color:#fff; padding:10px 14px; text-align:left; font-size:13px; font-weight:600; }
+td { padding:10px 14px; border-bottom:1px solid var(--border); font-size:14px; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:var(--primary-light); }
+.card { background:var(--bg-card); border-radius:10px; padding:20px 24px; margin:16px 0; box-shadow:0 1px 3px rgba(0,0,0,.06); border:1px solid var(--border); }
+.card-info { border-left:4px solid var(--primary); }
+.card-warn { border-left:4px solid var(--accent); }
+.card-danger { border-left:4px solid var(--danger); }
+.card-success { border-left:4px solid var(--success); }
+.card-title { font-weight:600; font-size:15px; margin-bottom:8px; }
+.badge { display:inline-block; padding:2px 8px; border-radius:12px; font-size:12px; font-weight:500; }
+.badge-primary { background:var(--primary-light); color:var(--primary-dark); }
+.badge-success { background:#d1fae5; color:#065f46; }
+.badge-warn { background:#fef3c7; color:#92400e; }
+.badge-danger { background:#fee2e2; color:#991b1b; }
+.badge-new { background:#fef3c7; color:#92400e; border:1px solid #f59e0b; }
+.callout { padding:12px 16px; border-radius:8px; margin:12px 0; font-size:14px; }
+.callout-info { background:var(--primary-light); color:var(--primary-dark); }
+.callout-warn { background:#fef3c7; color:#92400e; }
+.callout-danger { background:#fee2e2; color:#991b1b; }
+.callout-success { background:#d1fae5; color:#065f46; }
+.flow { background:#0f172a; color:#e2e8f0; padding:16px 20px; border-radius:8px; font-family:monospace; font-size:13px; line-height:1.8; overflow-x:auto; margin:12px 0; white-space:pre; }
+.flow .arrow { color:var(--accent); }
+.flow .green { color:var(--success); }
+.flow .blue { color:var(--primary); }
+.flow .red { color:var(--danger); }
+.flow .gray { color:#64748b; }
+.toc-toggle { display:none; position:fixed; top:16px; left:16px; z-index:200; background:#0f172a; color:#fff; border:none; border-radius:8px; width:40px; height:40px; cursor:pointer; font-size:20px; }
+.back-top { position:fixed; bottom:32px; right:32px; width:44px; height:44px; background:var(--primary); color:#fff; border:none; border-radius:50%; cursor:pointer; font-size:20px; box-shadow:0 4px 12px rgba(37,99,235,.3); z-index:100; opacity:0; transition:opacity .3s; }
+.back-top.show { opacity:1; }
+.back-top:hover { background:var(--primary-dark); }
+.hero { background:linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); color:#fff; padding:48px 32px; border-radius:12px; margin-bottom:32px; }
+.hero h1 { font-size:32px; font-weight:800; margin-bottom:8px; }
+.hero .desc { font-size:16px; color:#94a3b8; }
+.hero .meta { display:flex; gap:16px; margin-top:16px; flex-wrap:wrap; }
+.hero .meta-item { background:rgba(255,255,255,.08); padding:6px 14px; border-radius:20px; font-size:13px; }
+.progress-bar { height:4px; background:var(--border); border-radius:2px; position:fixed; top:0; left:var(--sidebar-w); right:0; z-index:99; }
+.progress-fill { height:100%; background:var(--primary); border-radius:2px; width:0; transition:width .1s; }
+.highlight-block { background:linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border:1px solid #f59e0b; border-radius:10px; padding:16px 20px; margin:16px 0; }
+.highlight-block .title { font-weight:700; color:#92400e; margin-bottom:8px; font-size:15px; }
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:16px 0; }
+.grid-item { background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:16px; }
+.grid-item h4 { margin-top:0; }
+@media(max-width:900px){
+  .sidebar { transform:translateX(-100%); }
+  .sidebar.open { transform:translateX(0); }
+  .main { margin-left:0; }
+  .progress-bar { left:0; }
+  .toc-toggle { display:block; }
+  .grid-2 { grid-template-columns:1fr; }
+  .content { padding:20px 16px 60px; }
+}
+.fold-btn { cursor:pointer; user-select:none; }
+.fold-btn::before { content:'▼ '; font-size:12px; color:var(--primary); }
+.fold-btn.collapsed::before { content:'▶ '; }
+.fold-content { overflow:hidden; transition:max-height .3s; }
+.fold-content.collapsed { max-height:0 !important; }
+.kv-list { display:grid; grid-template-columns:auto 1fr; gap:4px 16px; margin:8px 0; }
+.kv-list dt { font-weight:600; color:var(--text-light); white-space:nowrap; }
+.kv-list dd { color:var(--text); }
+</style>
+</head>
+<body>
+
+<button class="toc-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h1>RuoYi-Vue 技术文档</h1>
+      <div class="ver">v3.9.2 · master 分支</div>
+      <div class="sub">前端技术经理转后端专用</div>
+    </div>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="搜索章节内容..." oninput="searchContent()">
+    </div>
+    <nav class="nav" id="nav">
+      <div class="nav-section">
+        <div class="nav-section-title">项目概述</div>
+        <a class="nav-item" onclick="scrollToSection('ch1')">第一章 项目整体概述</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">技术栈</div>
+        <a class="nav-item" onclick="scrollToSection('ch2')">第二章 后端技术栈</a>
+        <a class="nav-item" onclick="scrollToSection('ch3')">第三章 前端技术栈</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">架构详解</div>
+        <a class="nav-item" onclick="scrollToSection('ch4')">第四章 多模块分层</a>
+        <a class="nav-item" onclick="scrollToSection('ch5')">第五章 内置功能拆解</a>
+        <a class="nav-item" onclick="scrollToSection('ch6')">第六章 权限体系底层</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">数据库与工具</div>
+        <a class="nav-item" onclick="scrollToSection('ch7')">第七章 数据库设计</a>
+        <a class="nav-item" onclick="scrollToSection('ch8')">第八章 代码生成器</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">安全与部署</div>
+        <a class="nav-item" onclick="scrollToSection('ch9')">第九章 安全专项</a>
+        <a class="nav-item" onclick="scrollToSection('ch10')">第十章 启动部署</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">实战指南</div>
+        <a class="nav-item" onclick="scrollToSection('ch11')">第十一章 专项功能实现</a>
+        <a class="nav-item" onclick="scrollToSection('ch12')">第十二章 开发规范</a>
+        <a class="nav-item" onclick="scrollToSection('ch13')">第十三章 学习路线</a>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="content" id="content">
+
+<!-- Hero -->
+<div class="hero">
+  <h1>RuoYi-Vue v3.9.2 完整项目技术吃透文档</h1>
+  <div class="desc">面向前端转后端技术经理 · SpringBoot + Vue 前后端分离 RBAC 权限管理系统</div>
+  <div class="meta">
+    <span class="meta-item">Spring Boot 2.5.15</span>
+    <span class="meta-item">Vue 2 + Element UI</span>
+    <span class="meta-item">Spring Security + JWT</span>
+    <span class="meta-item">MyBatis + MySQL + Redis</span>
+    <span class="meta-item">MIT License</span>
+  </div>
+</div>
+
+<!-- ============ 第一章 ============ -->
+<section id="ch1">
+<h2><span class="ch-num">1</span>项目整体概述</h2>
+
+<h3>1.1 项目基本信息</h3>
+<table>
+<tr><th style="width:140px">属性</th><th>说明</th></tr>
+<tr><td>项目名称</td><td>RuoYi-Vue（若依管理系统）</td></tr>
+<tr><td>版本号</td><td>v3.9.2</td></tr>
+<tr><td>仓库地址</td><td>https://gitee.com/y_project/RuoYi-Vue</td></tr>
+<tr><td>开源协议</td><td>MIT License（Copyright (c) 2018 RuoYi）</td></tr>
+<tr><td>项目定位</td><td>基于 SpringBoot + Vue 前后端分离的 Java 快速开发框架</td></tr>
+<tr><td>核心理念</td><td>全部开源、毫无保留、个人及企业免费使用</td></tr>
+</table>
+
+<div class="callout callout-info">
+<b>MIT 协议商用约束说明：</b>MIT 是最宽松的开源协议之一。<b>允许</b>商用、修改、分发、再授权、出售。唯一义务是在副本中包含版权声明。<b>免责</b>：软件按"现状"提供，不承担担保责任。<b>前端类比</b>：比 Apache 2.0 更宽松，不需要声明修改内容。
+</div>
+
+<h3>1.2 Maven 多模块工程拆分架构</h3>
+<div class="flow">ruoyi (父POM, packaging=pom)
+├── <span class="blue">ruoyi-admin</span>       → 启动模块，打包为可执行 jar，包含 Controller 层
+├── <span class="blue">ruoyi-framework</span>   → 框架核心，安全认证、权限拦截、AOP切面
+├── <span class="blue">ruoyi-system</span>      → 系统业务，Service + Mapper + Domain
+├── <span class="blue">ruoyi-quartz</span>      → 定时任务模块
+├── <span class="blue">ruoyi-generator</span>   → 代码生成器模块
+└── <span class="blue">ruoyi-common</span>      → 公共工具，常量、异常、工具类、注解</div>
+
+<div class="card card-info">
+<div class="card-title">模块依赖关系</div>
+<p><code>ruoyi-common</code> ← 被所有模块引用（相当于前端 utils/）<br>
+<code>ruoyi-system</code> ← 提供 Service 和 Mapper（相当于前端 api/）<br>
+<code>ruoyi-framework</code> ← 安全认证和权限拦截（相当于前端 router guard + axios interceptor）<br>
+<code>ruoyi-admin</code> ← 启动入口（相当于前端 App.vue + main.js）</p>
+</div>
+
+<h3>1.3 三大后端分支完整对比</h3>
+<table>
+<tr><th>对比维度</th><th>master (Boot 4.x)</th><th>springboot3 (Boot 3.x)</th><th>springboot2 (Boot 2.x)</th></tr>
+<tr><td>JDK 要求</td><td>JDK 17+</td><td>JDK 17+</td><td>JDK 8+</td></tr>
+<tr><td>Spring Boot</td><td>4.x</td><td>3.x</td><td>2.5.15</td></tr>
+<tr><td>Spring Security</td><td>6.x+</td><td>6.x</td><td>5.7.x</td></tr>
+<tr><td>命名空间</td><td>jakarta.*</td><td>jakarta.*</td><td>javax.*</td></tr>
+<tr><td>适用场景</td><td>最新技术栈</td><td>过渡版本</td><td>稳定成熟</td></tr>
+</table>
+
+<h3>1.4 三套前端工程完整对比</h3>
+<table>
+<tr><th>维度</th><th>RuoYi-Vue (当前)</th><th>RuoYi-Vue3</th><th>RuoYi-Vue3-TS</th></tr>
+<tr><td>框架</td><td>Vue 2</td><td>Vue 3</td><td>Vue 3</td></tr>
+<tr><td>语言</td><td>JavaScript</td><td>JavaScript</td><td>TypeScript</td></tr>
+<tr><td>构建</td><td>Vue CLI (Webpack)</td><td>Vite</td><td>Vite</td></tr>
+<tr><td>UI 库</td><td>Element UI</td><td>Element Plus</td><td>Element Plus</td></tr>
+<tr><td>状态管理</td><td>Vuex</td><td>Pinia</td><td>Pinia</td></tr>
+<tr><td>适用场景</td><td>存量维护</td><td>新项目首选</td><td>企业级协作</td></tr>
+</table>
+
+<h3>1.5 官方配套资源</h3>
+<dl class="kv-list">
+<dt>演示地址</dt><dd>http://vue.ruoyi.vip</dd>
+<dt>文档地址</dt><dd>http://doc.ruoyi.vip</dd>
+<dt>测试账号</dt><dd>admin / admin123</dd>
+<dt>Gitee 仓库</dt><dd>https://gitee.com/y_project/RuoYi-Vue</dd>
+<dt>Vue3 前端</dt><dd>https://gitcode.com/yangzongzhuan/RuoYi-Vue3</dd>
+<dt>交流群</dt><dd>QQ群 127358632</dd>
+</dl>
+</section>
+
+<!-- ============ 第二章 ============ -->
+<section id="ch2">
+<h2><span class="ch-num">2</span>后端完整技术栈清单</h2>
+
+<h3>2.1 核心容器与 Web 层</h3>
+<table>
+<tr><th>技术</th><th>版本</th><th>作用详解</th></tr>
+<tr><td><code>Spring Boot</code></td><td>2.5.15</td><td>自动配置框架，内嵌 Tomcat。相当于后端的 Vite，一键启动无需部署 WAR</td></tr>
+<tr><td><code>Spring Core</code></td><td>5.3.39</td><td>IoC 容器 + DI 依赖注入，管理所有 Bean 生命周期</td></tr>
+<tr><td><code>Spring MVC</code></td><td>5.3.39</td><td>Web MVC 框架，<code>@RestController</code>、<code>@GetMapping</code> 等注解</td></tr>
+<tr><td><code>Tomcat</code></td><td>9.0.112</td><td>内嵌 Servlet 容器，<code>java -jar</code> 启动</td></tr>
+</table>
+
+<h3>2.2 安全认证</h3>
+<table>
+<tr><th>技术</th><th>版本</th><th>作用详解</th></tr>
+<tr><td><code>Spring Security</code></td><td>5.7.14</td><td>企业级安全框架，提供认证（你是谁）+ 授权（你能做什么）</td></tr>
+<tr><td><code>JWT (jjwt)</code></td><td>0.9.1</td><td>无状态令牌，Token 携带用户 UUID，Redis 存储在线用户</td></tr>
+<tr><td><code>Redis</code></td><td>-</td><td>存储登录用户、验证码、密码错误次数、配置、字典</td></tr>
+<tr><td><code>BCrypt</code></td><td>-</td><td>密码加密算法，数据库中密码形如 <code>$2a$10$xxxx</code>，不可逆</td></tr>
+</table>
+
+<div class="card card-info">
+<div class="card-title">登录全链路校验流程</div>
+<div class="flow"><span class="gray"># 前端发送</span> POST /login (username, password, code, uuid)
+    <span class="arrow">↓</span>
+SysLoginController.login()
+    <span class="arrow">↓</span>
+SysLoginService.login()
+    <span class="blue">├── 1.</span> validateCaptcha()     → 验证码校验（Redis 取验证码对比）
+    <span class="blue">├── 2.</span> loginPreCheck()        → 前置校验（用户名/密码长度、IP 黑名单）
+    <span class="blue">├── 3.</span> authenticate()         → Spring Security 认证
+    <span class="blue">│       └──</span> UserDetailsServiceImpl.loadUserByUsername()
+    <span class="blue">│           └──</span> SysPasswordService.validate()
+    <span class="blue">│               ├──</span> 检查密码错误次数（Redis，超 5 次锁定 10 分钟）
+    <span class="blue">│               └──</span> BCrypt 密码匹配
+    <span class="blue">├── 4.</span> recordLoginInfo()      → 更新最后登录 IP 和时间
+    <span class="blue">└── 5.</span> createToken()          → 生成 JWT + Redis 缓存</div>
+</div>
+
+<h3>2.3 数据库层</h3>
+<table>
+<tr><th>技术</th><th>版本</th><th>作用详解</th></tr>
+<tr><td><code>MyBatis</code></td><td>-</td><td>ORM 框架，XML 映射 SQL。相当于前端的 axios 封装层</td></tr>
+<tr><td><code>PageHelper</code></td><td>1.4.7</td><td>分页插件，<code>startPage()</code> 自动追加 LIMIT</td></tr>
+<tr><td><code>MySQL</code></td><td>-</td><td>关系型数据库</td></tr>
+<tr><td><code>Druid</code></td><td>1.2.28</td><td>阿里连接池，监控面板（/druid）、慢 SQL 记录、SQL 防火墙</td></tr>
+</table>
+
+<h3>2.4 Redis 缓存方案</h3>
+<table>
+<tr><th>Redis Key 前缀</th><th>存储内容</th><th>TTL</th></tr>
+<tr><td><code>login_tokens:</code></td><td>登录用户完整信息（LoginUser）</td><td>30 分钟</td></tr>
+<tr><td><code>captcha_codes:</code></td><td>验证码文本</td><td>一次性</td></tr>
+<tr><td><code>sys_config:</code></td><td>系统参数配置</td><td>永久</td></tr>
+<tr><td><code>sys_dict:</code></td><td>字典数据</td><td>永久</td></tr>
+<tr><td><code>pwd_err_cnt:</code></td><td>密码错误次数</td><td>10 分钟</td></tr>
+<tr><td><code>repeat_submit:</code></td><td>防重复提交</td><td>短期</td></tr>
+<tr><td><code>rate_limit:</code></td><td>接口限流计数</td><td>按配置</td></tr>
+</table>
+
+<div class="highlight-block">
+<div class="title">★ 角色权限热更新缓存方案（迭代新增特性）</div>
+<p>管理员修改角色权限后，系统扫描 Redis 中所有 <code>login_tokens:*</code> Key，找到拥有该角色的在线用户，重新查询权限并刷新缓存，实现<b>无需用户重新登录即可生效新权限</b>。</p>
+</div>
+
+<h3>2.5 工具生态</h3>
+<table>
+<tr><th>技术</th><th>版本</th><th>作用</th></tr>
+<tr><td><code>Fastjson2</code></td><td>2.0.62</td><td>JSON 序列化/反序列化</td></tr>
+<tr><td><code>Apache POI</code></td><td>4.1.2</td><td>Excel 导入导出，<code>ExcelUtil&lt;T&gt;</code> 封装</td></tr>
+<tr><td><code>Kaptcha</code></td><td>2.3.3</td><td>验证码生成（数学计算/字符两种类型）</td></tr>
+<tr><td><code>Velocity</code></td><td>2.3</td><td>模板引擎，代码生成器使用 <code>.vm</code> 模板</td></tr>
+<tr><td><code>Commons IO</code></td><td>2.22.0</td><td>文件操作工具</td></tr>
+<tr><td><code>OSHI</code></td><td>7.3.0</td><td>系统信息获取（服务监控）</td></tr>
+</table>
+
+<h3>2.6 定时任务 Quartz</h3>
+<ul>
+<li><b>任务存储</b>：QRTZ_* 系列 11 张表 + <code>sys_job</code> + <code>sys_job_log</code></li>
+<li><b>动态管理</b>：运行时增删改任务，反射调用指定 Bean 方法</li>
+<li><b>安全限制</b>：白名单 <code>com.ruoyi.quartz.task</code>，黑名单禁止 <code>java.net.URL</code> 等</li>
+</ul>
+
+<h3>2.7 接口文档</h3>
+<ul>
+<li><b>框架</b>：Springfox Swagger 3.0.0</li>
+<li><b>地址</b>：<code>/swagger-ui/index.html</code></li>
+<li><b>注解驱动</b>：<code>@Api</code>、<code>@ApiOperation</code> 自动生成接口文档</li>
+</ul>
+
+<h3>2.8 底层配套</h3>
+<table>
+<tr><th>特性</th><th>实现类</th><th>说明</th></tr>
+<tr><td>全局异常处理</td><td><code>GlobalExceptionHandler</code></td><td>统一捕获异常返回标准 AjaxResult</td></tr>
+<tr><td>跨域处理</td><td><code>CorsFilter</code></td><td>Spring Security 配置中注册</td></tr>
+<tr><td>日志框架</td><td>Logback</td><td>输出到 logs/sys-info.log 等</td></tr>
+<tr><td>线程池</td><td><code>ThreadPoolConfig</code></td><td>异步任务执行</td></tr>
+<tr><td>数据脱敏</td><td><code>@Sensitive</code></td><td>注解驱动脱敏（手机号、邮箱）</td></tr>
+<tr><td>XSS 防护</td><td><code>XssFilter</code></td><td>请求参数 XSS 过滤</td></tr>
+<tr><td>防盗链</td><td><code>RefererFilter</code></td><td>Referer 头校验</td></tr>
+<tr><td>防重复提交</td><td><code>@RepeatSubmit</code></td><td>基于 Token 的防重提交</td></tr>
+</table>
+</section>
+
+<!-- ============ 第三章 ============ -->
+<section id="ch3">
+<h2><span class="ch-num">3</span>前端完整技术栈与前后端联动映射</h2>
+
+<h3>3.1 前端技术栈全景</h3>
+<table>
+<tr><th>技术</th><th>说明</th></tr>
+<tr><td><code>Vue 2</code></td><td>前端核心框架（Options API）</td></tr>
+<tr><td><code>Element UI</code></td><td>UI 组件库</td></tr>
+<tr><td><code>Vue CLI</code></td><td>构建工具（基于 Webpack）</td></tr>
+<tr><td><code>Vuex</code></td><td>全局状态管理</td></tr>
+<tr><td><code>Axios</code></td><td>HTTP 请求库</td></tr>
+<tr><td><code>Vue Quill</code></td><td>富文本编辑器</td></tr>
+<tr><td><code>ECharts</code></td><td>图表组件</td></tr>
+<tr><td><code>NProgress</code></td><td>路由切换进度条</td></tr>
+</table>
+
+<h3>3.2 Axios 拦截封装详解</h3>
+<div class="card card-info">
+<div class="card-title">请求拦截器</div>
+<pre><code>// 1. 自动携带 Token
+config.headers['Authorization'] = 'Bearer ' + getToken()
+
+// 2. GET 参数拼接到 URL
+if (config.method === 'get' && config.params) { ... }
+
+// 3. POST/PUT 防重复提交（sessionStorage 时间间隔判断）
+if (!isRepeatSubmit && (post || put)) { ... }</code></pre>
+</div>
+
+<div class="card card-warn">
+<div class="card-title">响应拦截器</div>
+<pre><code>if (code === 401)      → 登录过期，弹出重新登录提示
+else if (code === 500)  → Message.error 服务器错误
+else if (code === 601)  → Message.warning 警告
+else if (code !== 200)  → Notification.error
+else                    → return res.data（正常返回）</code></pre>
+</div>
+
+<h3>3.3 权限前后端映射：v-hasPermi ↔ @PreAuthorize</h3>
+<div class="flow"><span class="green"># 后端 Controller</span>
+@PreAuthorize("@ss.hasPermi('system:user:list')")
+@GetMapping("/list")
+
+<span class="green"># 前端模板</span>
+&lt;el-button v-hasPermi="['system:user:add']"&gt;新增&lt;/el-button&gt;
+
+<span class="gray"># 完整链路</span>
+数据库 sys_menu.perms = 'system:user:list'
+    <span class="arrow">↓</span>
+后端 getInfo() 返回 permissions 集合
+    <span class="arrow">↓</span>
+前端 Vuex store.commit('SET_PERMISSIONS', permissions)
+    <span class="arrow">↓</span>
+v-hasPermi 指令检查 → 控制 UI 元素显示/隐藏</div>
+
+<h3>3.4 动态路由流程</h3>
+<div class="flow"><span class="blue">1.</span> 用户登录成功 → 存储 Token
+<span class="blue">2.</span> 路由守卫检测 Token
+<span class="blue">3.</span> 如果 roles 为空（首次进入）：
+    <span class="blue">├──</span> dispatch('GetInfo')  → 调用后端 /getInfo
+    <span class="blue">└──</span> dispatch('GenerateRoutes') → 调用 /getRouters
+<span class="blue">4.</span> 后端返回菜单树 JSON
+<span class="blue">5.</span> 前端 filterAsyncRouter() 转换：
+    <span class="blue">├──</span> 'Layout'     → Layout 组件
+    <span class="blue">├──</span> 'ParentView' → ParentView 组件
+    <span class="blue">└──</span> 其他 → loadView() 动态 import .vue 文件
+<span class="blue">6.</span> router.addRoutes() → 动态注册路由</div>
+
+<h3>3.5 页签滚动层级优化（迭代新增特性）</h3>
+<div class="card card-success">
+<div class="card-title">底层 CSS 优化（AppMain.vue）</div>
+<pre><code>.app-main {
+  overflow: hidden;              /* 主容器隐藏溢出 */
+  position: relative;
+}
+.fixed-header + .app-main {
+  overflow-y: auto;
+  scrollbar-gutter: auto;        /* 预留滚动条空间，防止抖动 */
+  height: calc(100vh - 50px);
+}
+.hasTagsView .app-main {
+  min-height: calc(100vh - 84px); /* 84 = navbar(50) + tagsView(34) */
+}
+/* 移动端安全区域 */
+@media (max-width: 991px) {
+  .fixed-header + .app-main {
+    overscroll-behavior-y: none;  /* 防止滚动链 */
+  }
+}
+/* iOS Safari 100vh 修复 */
+@supports (-webkit-touch-callout: none) {
+  height: calc(100svh - 50px);
+  height: calc(100dvh - 50px);
+}</code></pre>
+</div>
+<p><b>ScrollPane 组件</b>：实现 <code>requestAnimationFrame</code> + 缓动函数的平滑滚动，滚轮事件拦截。</p>
+
+<h3>3.6 在线表单构建器</h3>
+<p>位于 <code>src/views/tool/build/index.vue</code>，拖拽式 HTML 表单代码生成器，拖拽表单元素到画布，生成对应的 HTML 源码，可复制使用。</p>
+</section>
+
+<!-- ============ 第四章 ============ -->
+<section id="ch4">
+<h2><span class="ch-num">4</span>后端多模块分层详解</h2>
+
+<h3>4.1 ruoyi-admin（启动模块）</h3>
+<p>系统启动入口，包含所有 Controller 和启动配置。</p>
+<table>
+<tr><th>Controller</th><th>路径前缀</th><th>职责</th></tr>
+<tr><td><code>SysLoginController</code></td><td>/ (login, getInfo, getRouters)</td><td>登录、获取用户信息和路由</td></tr>
+<tr><td><code>SysUserController</code></td><td>/system/user</td><td>用户管理 CRUD</td></tr>
+<tr><td><code>SysRoleController</code></td><td>/system/role</td><td>角色管理 CRUD <span class="badge badge-new">权限热刷新</span></td></tr>
+<tr><td><code>SysMenuController</code></td><td>/system/menu</td><td>菜单管理 CRUD</td></tr>
+<tr><td><code>SysDeptController</code></td><td>/system/dept</td><td>部门管理 CRUD</td></tr>
+<tr><td><code>SysNoticeController</code></td><td>/system/notice</td><td>通知公告 <span class="badge badge-new">阅读记录</span></td></tr>
+<tr><td><code>SysProfileController</code></td><td>/system/user/profile</td><td>个人信息、修改密码、头像上传</td></tr>
+<tr><td><code>SysUserOnlineController</code></td><td>/monitor/online</td><td>在线用户管理</td></tr>
+<tr><td><code>GenController</code></td><td>/tool/gen</td><td>代码生成器</td></tr>
+<tr><td><code>SysJobController</code></td><td>/monitor/job</td><td>定时任务管理</td></tr>
+</table>
+
+<h3>4.2 ruoyi-framework（框架核心模块）</h3>
+<div class="highlight-block">
+<div class="title">★ 权限热刷新核心代码（TokenService.refreshPermissionByRoleId）</div>
+<pre><code>public void refreshPermissionByRoleId(Long roleId, SysPermissionService permissionService) {
+    // 1. 扫描 Redis 中所有在线 Token
+    Collection&lt;String&gt; keys = redisCache.keys("login_tokens:*");
+    for (String key : keys) {
+        LoginUser loginUser = redisCache.getCacheObject(key);
+        // 2. 跳过管理员（拥有所有权限）
+        if (loginUser.getUser().isAdmin()) continue;
+        // 3. 判断用户是否拥有被修改的角色
+        boolean hasRole = loginUser.getUser().getRoles().stream()
+            .anyMatch(r -> roleId.equals(r.getRoleId()));
+        if (!hasRole) continue;
+        // 4. 重新查询权限并刷新 Redis 缓存
+        loginUser.setPermissions(permissionService.getMenuPermission(loginUser.getUser()));
+        refreshToken(loginUser);
+    }
+}</code></pre>
+<p><b>调用时机</b>：<code>SysRoleController.edit()</code> 方法中，角色修改成功后立即调用。</p>
+</div>
+
+<table>
+<tr><th>核心类</th><th>作用</th></tr>
+<tr><td><code>SecurityConfig</code></td><td>Spring Security 配置：禁用 CSRF/Session，注册 JWT 过滤器</td></tr>
+<tr><td><code>TokenService</code></td><td>Token 核心服务 + <b>权限热刷新方法</b></td></tr>
+<tr><td><code>SysLoginService</code></td><td>登录核心逻辑：验证码校验 + 前置校验 + 认证</td></tr>
+<tr><td><code>SysPasswordService</code></td><td>密码校验：错误次数计数 + 账号锁定</td></tr>
+<tr><td><code>PermissionService</code></td><td><code>@Service("ss")</code> 权限校验 Bean</td></tr>
+<tr><td><code>DataScopeAspect</code></td><td>数据权限切面：拦截 <code>@DataScope</code> 注解</td></tr>
+<tr><td><code>GlobalExceptionHandler</code></td><td>全局异常处理</td></tr>
+</table>
+
+<h3>4.3 ruoyi-common（公共工具模块）</h3>
+<p>常量、异常、工具类、注解、过滤器，被所有模块依赖。</p>
+<table>
+<tr><th>工具类</th><th>作用</th><th>前端类比</th></tr>
+<tr><td><code>SecurityUtils</code></td><td>获取当前登录用户、加密密码、校验权限</td><td>Vuex getters</td></tr>
+<tr><td><code>FileUploadUtils</code></td><td>文件上传：<b>后缀白名单校验</b>、路径生成</td><td>上传组件封装</td></tr>
+<tr><td><code>MimeTypeUtils</code></td><td><b>文件后缀白名单</b>（不含 html 等危险文件）</td><td>MIME 类型配置</td></tr>
+<tr><td><code>ExcelUtil&lt;T&gt;</code></td><td>Excel 导入导出，注解驱动</td><td>xlsx 插件</td></tr>
+</table>
+
+<h3>4.4 ruoyi-system / 4.5 ruoyi-quartz / 4.6 ruoyi-generator</h3>
+<div class="grid-2">
+<div class="grid-item">
+<h4>ruoyi-system</h4>
+<p>系统核心业务 Service + Mapper + Domain。包含用户、角色、菜单、部门、岗位、字典、参数、公告（含<b>已读记录</b>）、操作日志、登录日志等全部业务实现。</p>
+</div>
+<div class="grid-item">
+<h4>ruoyi-quartz</h4>
+<p>基于 Quartz 的动态定时任务管理。通过反射调用 Bean 方法，支持 Cron 表达式、并发控制、错误策略、执行日志。</p>
+</div>
+<div class="grid-item">
+<h4>ruoyi-generator</h4>
+<p>读取数据库表结构，使用 Velocity 模板（21 个 .vm 文件）生成前后端全套代码：Java 分层、Vue 页面、SQL 脚本、API 封装。</p>
+</div>
+<div class="grid-item">
+<h4>模块调用链路</h4>
+<div class="flow"><span class="blue">前端请求</span> → <span class="blue">Controller</span>
+    → <span class="blue">Service</span>
+    → <span class="blue">Mapper</span>
+    → <span class="blue">数据库</span>
+<span class="gray"># 横切关注点</span>
+<span class="blue">JwtFilter</span> → 认证
+<span class="blue">DataScope</span> → 数据权限
+<span class="blue">Log</span> → 操作日志</div>
+</div>
+</div>
+</section>
+
+<!-- ============ 第五章 ============ -->
+<section id="ch5">
+<h2><span class="ch-num">5</span>系统全部内置功能完整拆解</h2>
+
+<div class="fold-btn" onclick="toggleFold(this)">用户管理</div>
+<div class="fold-content">
+<table>
+<tr><th style="width:120px">维度</th><th>详情</th></tr>
+<tr><td>数据库表</td><td><code>sys_user</code>、<code>sys_user_role</code>、<code>sys_user_post</code></td></tr>
+<tr><td>后端接口</td><td><code>/system/user/list</code>、<code>/system/user</code>、<code>/system/user/{ids}</code>、<code>/system/user/export</code>、<code>/system/user/importData</code>、<code>/system/user/resetPwd</code></td></tr>
+<tr><td>权限校验</td><td><code>system:user:list/query/add/edit/remove/export/import/resetPwd</code></td></tr>
+<tr><td>数据权限</td><td><code>@DataScope(deptAlias = "d", userAlias = "u")</code></td></tr>
+</table>
+</div>
+
+<div class="fold-btn" onclick="toggleFold(this)">部门管理</div>
+<div class="fold-content">
+<table>
+<tr><th style="width:120px">维度</th><th>详情</th></tr>
+<tr><td>数据库表</td><td><code>sys_dept</code>（树结构：parent_id + ancestors 祖级列表）</td></tr>
+<tr><td>树结构</td><td><code>ancestors</code> 存储祖级路径（如 <code>0,100,101</code>），配合 <code>find_in_set()</code> 层级查询</td></tr>
+<tr><td>数据权限</td><td><code>@DataScope(deptAlias = "d")</code></td></tr>
+</table>
+</div>
+
+<div class="fold-btn" onclick="toggleFold(this)">角色管理（含权限热刷新）</div>
+<div class="fold-content">
+<table>
+<tr><th style="width:120px">维度</th><th>详情</th></tr>
+<tr><td>数据库表</td><td><code>sys_role</code>（含 data_scope）、<code>sys_role_menu</code>、<code>sys_role_dept</code></td></tr>
+<tr><td>后端接口</td><td><code>/system/role/list</code>、<code>/system/role</code>、<code>/system/role/dataScope</code>、<code>/system/role/authUser/*</code></td></tr>
+<tr><td>权限热刷新</td><td><code>SysRoleController.edit()</code> → <code>tokenService.refreshPermissionByRoleId()</code> <span class="badge badge-new">新增</span></td></tr>
+<tr><td>数据范围</td><td>1全部、2自定义、3本部门、4本部门及以下、5仅本人</td></tr>
+</table>
+</div>
+
+<div class="fold-btn" onclick="toggleFold(this)">菜单管理</div>
+<div class="fold-content">
+<table>
+<tr><th style="width:120px">维度</th><th>详情</th></tr>
+<tr><td>数据库表</td><td><code>sys_menu</code>（menu_type: M目录/C菜单/F按钮）</td></tr>
+<tr><td>核心方法</td><td><code>selectMenuTreeByUserId()</code> 按权限查询菜单树、<code>buildMenus()</code> 构建前端路由</td></tr>
+<tr><td>权限标识</td><td><code>perms</code> 字段与 <code>@PreAuthorize</code> 一一对应</td></tr>
+</table>
+</div>
+
+<div class="fold-btn" onclick="toggleFold(this)">字典管理</div>
+<div class="fold-content">
+<p>字典类型 <code>sys_dict_type</code> + 字典数据 <code>sys_dict_data</code>。Redis 缓存 <code>sys_dict:</code> 前缀，字典变更时自动刷新。前端使用 <code>&lt;el-select v-for="dict in dict.type.sys_user_sex"&gt;</code> 动态渲染。</p>
+</div>
+
+<div class="fold-btn" onclick="toggleFold(this)">参数管理</div>
+<div class="fold-content">
+<p>参数配置表 <code>sys_config</code>，Redis 缓存 <code>sys_config:</code> 前缀。</p>
+<table>
+<tr><th>关键参数</th><th>说明</th></tr>
+<tr><td><code>sys.user.initPassword</code></td><td>新用户初始密码（123456）</td></tr>
+<tr><td><code>sys.account.captchaEnabled</code></td><td>验证码开关</td></tr>
+<tr><td><code>sys.account.chrtype</code></td><td><b>密码字符范围</b>（0-4）<span class="badge badge-new">新增</span></td></tr>
+<tr><td><code>sys.account.initPasswordModify</code></td><td>初始密码修改策略 <span class="badge badge-new">新增</span></td></tr>
+<tr><td><code>sys.account.passwordValidateDays</code></td><td>密码更新周期 <span class="badge badge-new">新增</span></td></tr>
+<tr><td><code>sys.login.blackIPList</code></td><td>登录 IP 黑名单</td></tr>
+</table>
+</div>
+
+<div class="fold-btn" onclick="toggleFold(this)">通知公告（含阅读记录统计 - 迭代新增特性）</div>
+<div class="fold-content">
+<div class="highlight-block">
+<div class="title">★ 新增功能：公告阅读用户统计</div>
+<p>新增 <code>sys_notice_read</code> 表，实现公告已读/未读标记、未读数统计、已读用户列表查询。</p>
+</div>
+<table>
+<tr><th style="width:120px">维度</th><th>详情</th></tr>
+<tr><td>数据库表</td><td><code>sys_notice</code> + <b><code>sys_notice_read</code>（新增）</b></td></tr>
+<tr><td>新增表结构</td><td>read_id、notice_id、user_id、read_time，唯一索引 <code>uk_user_notice</code></td></tr>
+<tr><td>新增接口</td><td><code>/system/notice/listTop</code>（首页公告+未读数）、<code>/system/notice/markRead</code>（标记已读）、<code>/system/notice/markReadAll</code>（批量已读）、<code>/system/notice/readUsers/list</code>（已读用户列表）</td></tr>
+<tr><td>幂等设计</td><td><code>INSERT IGNORE INTO sys_notice_read</code> 实现幂等标记</td></tr>
+<tr><td>已读用户列表</td><td><code>INNER JOIN sys_user</code> + <code>LEFT JOIN sys_dept</code> 获取用户详情</td></tr>
+</table>
+<div class="flow"><span class="gray"># 完整源码链路</span>
+Controller: SysNoticeController
+  <span class="blue">├──</span> listTop() → noticeReadService.selectNoticeListWithReadStatus(userId, 5)
+  <span class="blue">│     →</span> LEFT JOIN sys_notice_read，CASE WHEN 标记 isRead
+  <span class="blue">├──</span> markRead(noticeId) → INSERT IGNORE INTO sys_notice_read
+  <span class="blue">├──</span> markReadAll(ids) → 批量 INSERT IGNORE
+  <span class="blue">├──</span> readUsersList(noticeId) → INNER JOIN sys_user + sys_dept
+  <span class="blue">└──</span> remove(noticeIds) → 删除公告时清理已读记录</div>
+</div>
+
+<div class="fold-btn" onclick="toggleFold(this)">操作日志 / 登录日志 / 在线用户 / 定时任务</div>
+<div class="fold-content">
+<table>
+<tr><th>功能</th><th>数据库表</th><th>后端接口</th><th>实现要点</th></tr>
+<tr><td>操作日志</td><td><code>sys_oper_log</code></td><td><code>/monitor/operlog/*</code></td><td><code>@Log</code> 注解 + AOP 自动记录</td></tr>
+<tr><td>登录日志</td><td><code>sys_logininfor</code></td><td><code>/monitor/logininfor/*</code></td><td>异步线程池记录</td></tr>
+<tr><td>在线用户</td><td>Redis <code>login_tokens:*</code></td><td><code>/monitor/online/*</code></td><td>遍历 Redis Key 获取在线用户</td></tr>
+<tr><td>定时任务</td><td><code>sys_job</code> + <code>sys_job_log</code></td><td><code>/monitor/job/*</code></td><td>反射调用 Bean 方法，白名单安全限制</td></tr>
+</table>
+</div>
+
+<div class="fold-btn" onclick="toggleFold(this)">代码生成 / 服务监控 / 缓存监控 / 连接池监控 / 表单构建器</div>
+<div class="fold-content">
+<table>
+<tr><th>功能</th><th>路由</th><th>实现</th></tr>
+<tr><td>代码生成</td><td><code>/tool/gen</code></td><td>Velocity 模板生成前后端代码</td></tr>
+<tr><td>服务监控</td><td><code>/monitor/server</code></td><td>OSHI 获取 CPU/内存/磁盘</td></tr>
+<tr><td>缓存监控</td><td><code>/monitor/cache</code></td><td>Redis info + dbsize + commandStats</td></tr>
+<tr><td>连接池监控</td><td><code>/monitor/druid</code></td><td>Druid StatViewServlet（ruoyi/123456）</td></tr>
+<tr><td>表单构建器</td><td><code>/tool/build</code></td><td>拖拽表单元素生成 HTML</td></tr>
+</table>
+</div>
+</section>
+
+<!-- ============ 第六章 ============ -->
+<section id="ch6">
+<h2><span class="ch-num">6</span>核心权限体系底层原理</h2>
+
+<h3>6.1 完整登录流程</h3>
+<div class="flow"><span class="blue">1.</span> 前端：用户输入 用户名 + 密码 + 验证码
+<span class="blue">2.</span> POST /login { username, password, code, uuid }
+<span class="blue">3.</span> SysLoginService.login()
+    <span class="blue">├──</span> validateCaptcha(): Redis 取验证码对比后删除
+    <span class="blue">├──</span> loginPreCheck(): 长度校验 + IP 黑名单
+    <span class="blue">└──</span> authenticate()
+        <span class="blue">└──</span> UserDetailsServiceImpl.loadUserByUsername()
+            <span class="blue">├──</span> 查数据库用户
+            <span class="blue">├──</span> 检查状态（删除/停用）
+            <span class="blue">└──</span> SysPasswordService.validate()
+                <span class="blue">├──</span> Redis 取错误次数（超 5 次锁 10 分钟）
+                <span class="blue">└──</span> BCrypt.matches(原始密码, 数据库密码)
+<span class="blue">4.</span> tokenService.createToken(loginUser)
+    <span class="blue">├──</span> 生成 UUID 作为 Token 标识
+    <span class="blue">├──</span> setUserAgent(): 设置 IP/浏览器/OS
+    <span class="blue">└──</span> refreshToken(): 存入 Redis（30 分钟 TTL）
+<span class="blue">5.</span> 返回 { code: 200, token: "eyJhbG..." }
+<span class="blue">6.</span> 前端 setToken() → Cookie + Vuex</div>
+
+<h3>6.2 请求鉴权链路</h3>
+<div class="flow"><span class="gray"># 每个 HTTP 请求</span>
+JwtAuthenticationTokenFilter.doFilterInternal()
+  <span class="blue">├──</span> tokenService.getLoginUser(request)
+  <span class="blue">│   ├──</span> Header 取 Authorization: Bearer xxx
+  <span class="blue">│   ├──</span> 解析 JWT → UUID
+  <span class="blue">│   └──</span> Redis 取 LoginUser
+  <span class="blue">├──</span> tokenService.verifyToken(loginUser)
+  <span class="blue">│   └──</span> 距过期不足 20 分钟 → refreshToken() 自动续期
+  <span class="blue">└──</span> SecurityContextHolder.setAuthentication()
+        <span class="arrow">↓</span>
+Controller: @PreAuthorize("@ss.hasPermi('xxx')")
+  <span class="blue">├──</span> PermissionService.hasPermi()
+  <span class="blue">│   └──</span> 检查 loginUser.getPermissions() 是否包含权限
+  <span class="blue">└──</span> 方法执行</div>
+
+<h3>6.3 三层权限完整源码</h3>
+
+<h4>第一层：菜单权限（路由级）</h4>
+<p>后端 <code>getRouters()</code> 按角色查询有权限的菜单树；前端路由守卫动态注册路由，无权限菜单不出现。</p>
+
+<h4>第二层：按钮权限（操作级）</h4>
+<div class="flow"><span class="gray"># 后端</span>
+@PreAuthorize("@ss.hasPermi('system:user:add')")
+
+<span class="gray"># 前端</span>
+&lt;el-button v-hasPermi="['system:user:add']"&gt;
+
+<span class="gray"># 后端 PermissionService.hasPermi()</span>
+loginUser.getPermissions().contains(permission)
+    <span class="blue">├──</span> 包含 "*:*:*" → 超级权限
+    <span class="blue">└──</span> 包含指定权限 → 返回 true</div>
+
+<h4>第三层：数据范围权限（数据级）</h4>
+<table>
+<tr><th>data_scope</th><th>含义</th><th>SQL 条件</th></tr>
+<tr><td>1</td><td>全部数据</td><td>不加条件</td></tr>
+<tr><td>2</td><td>自定义</td><td><code>d.dept_id IN (SELECT dept_id FROM sys_role_dept WHERE role_id = ?)</code></td></tr>
+<tr><td>3</td><td>本部门</td><td><code>d.dept_id = 用户部门ID</code></td></tr>
+<tr><td>4</td><td>本部门及以下</td><td><code>d.dept_id IN (SELECT ... WHERE find_in_set(?, ancestors))</code></td></tr>
+<tr><td>5</td><td>仅本人</td><td><code>u.user_id = 当前用户ID</code></td></tr>
+</table>
+
+<h3>6.4 角色权限变更后实时刷新（关键新增逻辑）</h3>
+<div class="highlight-block">
+<div class="title">★ 完整实现链路</div>
+<div class="flow"><span class="blue">管理员修改角色权限</span>
+    <span class="arrow">↓</span>
+SysRoleController.edit()
+  <span class="blue">├──</span> roleService.updateRole(role) → 更新 sys_role + sys_role_menu
+  <span class="blue">└──</span> tokenService.refreshPermissionByRoleId(roleId, permissionService)
+      <span class="blue">├──</span> 遍历 Redis 所有 login_tokens:* Key
+      <span class="blue">├──</span> 跳过管理员
+      <span class="blue">├──</span> 判断用户是否拥有该角色
+      <span class="blue">├──</span> 重新查询权限 → loginUser.setPermissions(newPermissions)
+      <span class="blue">└──</span> refreshToken(loginUser) → 重新写入 Redis
+    <span class="arrow">↓</span>
+<span class="green">在线用户下次请求自动使用新权限，无需重新登录</span></div>
+</div>
+
+<div class="callout callout-info">
+<b>补充机制</b>：<code>getInfo</code> 接口也有权限刷新逻辑——如果当前用户的权限集合与数据库最新权限不一致，自动刷新 Redis 缓存。这确保即使用户的 Token 未被角色变更触发刷新，下次调用 <code>getInfo</code> 时也会自动同步。
+</div>
+</section>
+
+<!-- ============ 第七章 ============ -->
+<section id="ch7">
+<h2><span class="ch-num">7</span>数据库完整设计</h2>
+
+<h3>7.1 核心业务表清单（20张表）</h3>
+<table>
+<tr><th>序号</th><th>表名</th><th>说明</th><th>关键字段</th></tr>
+<tr><td>1</td><td><code>sys_dept</code></td><td>部门表</td><td>parent_id, ancestors（祖级列表）</td></tr>
+<tr><td>2</td><td><code>sys_user</code></td><td>用户信息表</td><td>password（BCrypt）, pwd_update_date</td></tr>
+<tr><td>3</td><td><code>sys_post</code></td><td>岗位信息表</td><td>post_code</td></tr>
+<tr><td>4</td><td><code>sys_role</code></td><td>角色信息表</td><td>role_key, <b>data_scope</b></td></tr>
+<tr><td>5</td><td><code>sys_menu</code></td><td>菜单权限表</td><td><b>menu_type</b>(M/C/F), <b>perms</b></td></tr>
+<tr><td>6</td><td><code>sys_user_role</code></td><td>用户-角色关联</td><td>联合主键</td></tr>
+<tr><td>7</td><td><code>sys_role_menu</code></td><td>角色-菜单关联</td><td>联合主键</td></tr>
+<tr><td>8</td><td><code>sys_role_dept</code></td><td>角色-部门关联</td><td>自定义数据权限</td></tr>
+<tr><td>9</td><td><code>sys_user_post</code></td><td>用户-岗位关联</td><td>联合主键</td></tr>
+<tr><td>10</td><td><code>sys_oper_log</code></td><td>操作日志</td><td>oper_param, json_result, cost_time</td></tr>
+<tr><td>11</td><td><code>sys_dict_type</code></td><td>字典类型</td><td>dict_type（唯一）</td></tr>
+<tr><td>12</td><td><code>sys_dict_data</code></td><td>字典数据</td><td>dict_label, dict_value</td></tr>
+<tr><td>13</td><td><code>sys_config</code></td><td>参数配置</td><td>config_key, config_value</td></tr>
+<tr><td>14</td><td><code>sys_logininfor</code></td><td>系统访问记录</td><td>ipaddr, status</td></tr>
+<tr><td>15</td><td><code>sys_job</code></td><td>定时任务调度</td><td>invoke_target, cron_expression</td></tr>
+<tr><td>16</td><td><code>sys_job_log</code></td><td>任务日志</td><td>exception_info</td></tr>
+<tr><td>17</td><td><code>sys_notice</code></td><td>通知公告</td><td>notice_type, notice_content（longblob）</td></tr>
+<tr><td><b>18</b></td><td><b><code>sys_notice_read</code></b></td><td><b>公告已读记录（新增）</b></td><td>notice_id, user_id, read_time</td></tr>
+<tr><td>19</td><td><code>gen_table</code></td><td>代码生成业务表</td><td>table_name, class_name</td></tr>
+<tr><td>20</td><td><code>gen_table_column</code></td><td>代码生成字段表</td><td>java_field, html_type</td></tr>
+</table>
+
+<h3>7.2 权限五联表关联图</h3>
+<div class="flow">sys_user ──N:1── sys_user_role ──1:N── sys_role
+    <span class="blue">│</span>                                       <span class="blue">│</span>
+    <span class="blue">│</span>                                  sys_role_menu ──1:N── sys_menu
+    <span class="blue">│</span>                                       <span class="blue">│</span>
+    <span class="blue">└──N:1── sys_dept                     sys_role_dept ──1:N── sys_dept
+                    <span class="gray">↑</span>                                     <span class="gray">↑</span>
+              sys_user_post                              数据范围过滤
+              ──1:N── sys_post</div>
+
+<h3>7.3 新增表：sys_notice_read</h3>
+<pre><code>CREATE TABLE sys_notice_read (
+  read_id     bigint(20)  NOT NULL AUTO_INCREMENT,
+  notice_id   int(4)      NOT NULL,
+  user_id     bigint(20)  NOT NULL,
+  read_time   datetime    NOT NULL,
+  PRIMARY KEY (read_id),
+  UNIQUE KEY uk_user_notice (user_id, notice_id)  -- 幂等：同用户同公告只记录一次
+) ENGINE=InnoDB COMMENT='公告已读记录表';</code></pre>
+
+<h3>7.4 安全相关配置字段</h3>
+<table>
+<tr><th>config_key</th><th>默认值</th><th>说明</th></tr>
+<tr><td><code>sys.account.chrtype</code></td><td>0</td><td><b>密码字符范围</b>（0任意/1数字/2字母/3字母+数字/4字母+数字+特殊字符）</td></tr>
+<tr><td><code>sys.account.initPasswordModify</code></td><td>1</td><td>初始密码修改策略</td></tr>
+<tr><td><code>sys.account.passwordValidateDays</code></td><td>0</td><td>密码更新周期（0不限制）</td></tr>
+<tr><td><code>sys.login.blackIPList</code></td><td>空</td><td>登录 IP 黑名单</td></tr>
+<tr><td><code>sys.account.captchaEnabled</code></td><td>true</td><td>验证码开关</td></tr>
+</table>
+
+<h3>7.5 SQL 脚本执行顺序</h3>
+<div class="callout callout-warn">
+<b>执行顺序：</b><br>
+1. 先执行 <code>sql/ry_20260417.sql</code>：创建全部业务表（20张）+ 初始化数据<br>
+2. 再执行 <code>sql/quartz.sql</code>：创建 Quartz 定时任务表（11张）<br>
+3. 数据库名默认 <code>ry-vue</code>，字符集 UTF-8
+</div>
+</section>
+
+<!-- ============ 第八章 ============ -->
+<section id="ch8">
+<h2><span class="ch-num">8</span>代码生成器完整底层实现</h2>
+
+<h3>8.1 读取数据库表结构流程</h3>
+<div class="flow"><span class="blue">1.</span> GenController.importTable(tables)
+<span class="blue">2.</span> 查询 information_schema.tables（获取表注释）
+<span class="blue">3.</span> 查询 information_schema.columns（获取字段名、类型、注释）
+<span class="blue">4.</span> 创建 gen_table + gen_table_column 记录
+<span class="blue">5.</span> GenUtils.initColumnField() 自动推断：
+    <span class="blue">├──</span> java_type（varchar→String, bigint→Long...）
+    <span class="blue">├──</span> java_field（驼峰命名转换）
+    <span class="blue">├──</span> html_type（varchar→input, text→textarea, datetime→datetime...）
+    <span class="blue">└──</span> query_type（EQ/NE/GT/LT/LIKE/BETWEEN）</div>
+
+<h3>8.2 Velocity 模板清单（21个）</h3>
+<table>
+<tr><th>分类</th><th>模板文件</th><th>生成内容</th></tr>
+<tr><td rowspan="6">Java</td><td><code>controller.java.vm</code></td><td>Controller（含 @PreAuthorize）</td></tr>
+<tr><td><code>domain.java.vm</code></td><td>实体类</td></tr>
+<tr><td><code>mapper.java.vm</code></td><td>Mapper 接口</td></tr>
+<tr><td><code>service.java.vm</code></td><td>Service 接口</td></tr>
+<tr><td><code>serviceImpl.java.vm</code></td><td>Service 实现</td></tr>
+<tr><td><code>mapper.xml.vm</code></td><td>MyBatis XML</td></tr>
+<tr><td rowspan="3">Vue2</td><td><code>index.vue.vm</code></td><td>列表页面（增删改查弹窗）</td></tr>
+<tr><td><code>index-tree.vue.vm</code></td><td>树表页面</td></tr>
+<tr><td><code>view.vue.vm</code></td><td>详情页面</td></tr>
+<tr><td rowspan="2">其他</td><td><code>api.js.vm</code></td><td>前端 API 封装</td></tr>
+<tr><td><code>sql.vm</code></td><td>菜单权限 SQL</td></tr>
+</table>
+<p>另有 Vue3、Vue3-TS 版本模板各 3 个，共 21 个模板文件。</p>
+
+<h3>8.3 代码打包下载</h3>
+<p><code>GenController.download()</code> → 遍历模板 → Velocity 合并 → 写入 <code>ZipOutputStream</code>（按 java/、vue/、sql/、js/ 目录结构）。</p>
+</section>
+
+<!-- ============ 第九章 ============ -->
+<section id="ch9">
+<h2><span class="ch-num">9</span>安全专项</h2>
+
+<h3>9.1 文件上传安全：后缀白名单拦截 html 等危险文件</h3>
+<div class="highlight-block">
+<div class="title">★ 白名单制：只允许指定类型，html/htm/js/jsp/php 均被拦截</div>
+<pre><code>// MimeTypeUtils.java - 白名单定义
+public static final String[] DEFAULT_ALLOWED_EXTENSION = {
+    "bmp", "gif", "jpg", "jpeg", "png",        // 图片
+    "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt",  // 文档
+    "rar", "zip", "gz", "bz2",                 // 压缩文件
+    "mp4", "avi", "rmvb",                      // 视频
+    "pdf"                                      // PDF
+};
+// 注意：不包含 html, htm, js, jsp, php, sh, bat 等危险类型</code></pre>
+</div>
+
+<p><b>校验流程（FileUploadUtils.assertAllowed）：</b></p>
+<ol>
+<li>文件大小校验（默认 50MB）</li>
+<li>获取文件后缀（先取文件名后缀，取不到则从 ContentType 推断）</li>
+<li>白名单校验：<code>isAllowedExtension(extension, allowedExtension)</code></li>
+<li>不在白名单 → 抛出 <code>InvalidExtensionException</code></li>
+</ol>
+
+<p><b>文件下载安全（FileUtils.checkAllowDownload）：</b></p>
+<ul>
+<li>禁止目录跳转：<code>if (contains(resource, ".."))</code> → false</li>
+<li>仅允许白名单后缀下载</li>
+</ul>
+
+<h3>9.2 用户密码安全：自定义密码复杂度配置</h3>
+<table>
+<tr><th>chrtype</th><th>规则</th><th>正则表达式</th></tr>
+<tr><td>0（默认）</td><td>任意字符（排除危险符号）</td><td><code>/^[^&lt;&gt;"'\|\\]+$/</code></td></tr>
+<tr><td>1</td><td>纯数字</td><td><code>/^[0-9]+$/</code></td></tr>
+<tr><td>2</td><td>纯字母</td><td><code>/^[a-zA-Z]+$/</code></td></tr>
+<tr><td>3</td><td>字母+数字（必须同时包含）</td><td><code>/^(?=.*[a-zA-Z])(?=.*[0-9])[a-zA-Z0-9]+$/</code></td></tr>
+<tr><td>4</td><td>字母+数字+特殊字符</td><td><code>/^(?=.*[A-Za-z])(?=.*\d)(?=.*[~!@#$%^&amp;*()\-=_+])[...]+$/</code></td></tr>
+</table>
+
+<p><b>后端传递到前端</b>：<code>getInfo()</code> 接口返回 <code>pwdChrtype</code>，前端存入 sessionStorage，<code>passwordRule.js</code> mixin 根据 chrtype 动态生成校验规则。</p>
+
+<p><b>密码过期策略</b>：</p>
+<ul>
+<li><code>initPasswordModify=1</code>：未修改初始密码时登录提醒</li>
+<li><code>passwordValidateDays>0</code>：超过天数登录提醒修改</li>
+</ul>
+
+<p><b>密码错误锁定</b>：最大 5 次，锁定 10 分钟（Redis <code>pwd_err_cnt:{username}</code> 计数）</p>
+
+<h3>9.3 在线用户权限热更新缓存机制</h3>
+<div class="card card-success">
+<div class="card-title">无需用户重新登录，权限变更实时生效</div>
+<ol>
+<li>管理员修改角色权限（菜单分配）</li>
+<li><code>SysRoleController.edit()</code> 调用 <code>refreshPermissionByRoleId()</code></li>
+<li>遍历 Redis 所有 <code>login_tokens:*</code> Key</li>
+<li>跳过管理员、检查角色匹配、重新查询权限</li>
+<li>更新 <code>loginUser.setPermissions()</code> → 重新写入 Redis</li>
+<li>用户下次请求自动使用新权限</li>
+</ol>
+</div>
+</section>
+
+<!-- ============ 第十章 ============ -->
+<section id="ch10">
+<h2><span class="ch-num">10</span>本地开发、启动、部署全流程</h2>
+
+<h3>10.1 环境依赖</h3>
+<table>
+<tr><th>依赖</th><th>版本要求</th><th>说明</th></tr>
+<tr><td>JDK</td><td>8+（当前）/ 17+（master）</td><td><code>java -version</code></td></tr>
+<tr><td>Maven</td><td>3.6+</td><td><code>mvn -version</code></td></tr>
+<tr><td>MySQL</td><td>5.7+ / 8.0</td><td>InnoDB 引擎</td></tr>
+<tr><td>Redis</td><td>5.0+</td><td>缓存中间件</td></tr>
+<tr><td>Node.js</td><td>12+</td><td>前端构建</td></tr>
+</table>
+
+<h3>10.2 application.yml 关键参数</h3>
+<pre><code>ruoyi:
+  profile: D:/ruoyi/uploadPath    # 文件上传根路径
+  captchaType: math               # 验证码类型
+
+server:
+  port: 8080                      # 后端端口
+
+user:
+  password:
+    maxRetryCount: 5              # 密码最大错误次数
+    lockTime: 10                  # 锁定时间（分钟）
+
+spring:
+  redis:
+    host: localhost               # Redis 地址
+    port: 6379
+  servlet:
+    multipart:
+      max-file-size: 10MB         # 单文件大小
+      max-request-size: 20MB      # 总上传大小
+
+token:
+  header: Authorization           # Token 请求头
+  secret: abcdefghijklmnopqrstuvwxyz  # JWT 密钥（生产必改！）
+  expireTime: 30                  # Token 有效期（分钟）
+
+xss:
+  enabled: true                   # XSS 过滤开关
+  excludes: /system/notice        # 排除路径</code></pre>
+
+<h3>10.3 前端启动流程</h3>
+<pre><code>cd ruoyi-ui
+npm install --registry=https://registry.npmmirror.com
+npm run dev     # 开发（默认 80 端口）
+npm run build:prod  # 生产打包</code></pre>
+
+<p><b>代理跨域配置（vue.config.js）：</b></p>
+<pre><code>devServer: {
+  proxy: {
+    '/dev-api': {                    // 前缀
+      target: 'http://localhost:8080',
+      changeOrigin: true,
+      pathRewrite: { '^/dev-api': '' }
+    }
+  }
+}</code></pre>
+
+<h3>10.4 ry.sh / ry.bat 启动脚本</h3>
+<p><b>ry.sh（Linux）</b>：接收 start/stop/restart/status 参数，<code>nohup java $JVM_OPTS -jar ruoyi-admin.jar</code> 后台启动。</p>
+<p><b>ry.bat（Windows）</b>：交互式菜单，<code>javaw</code> 后台启动，<code>taskkill</code> 终止。</p>
+
+<h3>10.5 跨版本兼容踩坑</h3>
+<table>
+<tr><th>问题</th><th>原因</th><th>解决方案</th></tr>
+<tr><td>Boot2→Boot3/4 启动报错</td><td>javax→jakarta 包名变更</td><td>全局替换 <code>javax.servlet</code> → <code>jakarta.servlet</code></td></tr>
+<tr><td>Vue2→Vue3 联调报错</td><td>Element UI→Element Plus API 差异</td><td>前端替换组件</td></tr>
+<tr><td>JWT 库不兼容</td><td>jjwt 0.9.1 使用 javax</td><td>升级到 jjwt 0.11.x+</td></tr>
+<tr><td>前端代理 404</td><td>context-path 配置</td><td>检查 <code>server.servlet.context-path</code></td></tr>
+</table>
+</section>
+
+<!-- ============ 第十一章 ============ -->
+<section id="ch11">
+<h2><span class="ch-num">11</span>专项功能底层实现</h2>
+
+<h3>11.1 Redis 缓存工具与权限缓存刷新</h3>
+<p><b>RedisCache</b> 封装类基于 Spring Data Redis 的 <code>RedisTemplate</code>，提供 <code>setCacheObject</code>、<code>getCacheObject</code>、<code>deleteObject</code>、<code>keys</code> 等方法。</p>
+<p><b>权限缓存刷新三种触发方式：</b></p>
+<table>
+<tr><th>触发方式</th><th>代码位置</th><th>场景</th></tr>
+<tr><td>角色权限变更</td><td><code>SysRoleController.edit()</code></td><td>管理员修改角色菜单</td></tr>
+<tr><td>getInfo 接口</td><td><code>SysLoginController.getInfo()</code></td><td>用户刷新页面</td></tr>
+<tr><td>Token 自动续期</td><td><code>JwtAuthenticationTokenFilter</code></td><td>每次请求检查</td></tr>
+</table>
+
+<h3>11.2 Quartz 动态定时任务开发示例</h3>
+<pre><code>// 1. 创建任务类（com.ruoyi.quartz.task 包下）
+@Component("myTask")
+public class MyTask {
+    public void execute(String param) {
+        System.out.println("定时任务执行，参数：" + param);
+    }
+}
+
+// 2. 管理页面配置：
+//    调用目标字符串：myTask.execute('hello')
+//    Cron 表达式：0/30 * * * * ?
+
+// 3. 系统通过反射调用：
+Object bean = SpringUtils.getBean("myTask");
+Method method = bean.getClass().getMethod("execute", String.class);
+method.invoke(bean, "hello");</code></pre>
+
+<h3>11.3 文件上传限制配置</h3>
+<table>
+<tr><th>配置项</th><th>默认值</th></tr>
+<tr><td>上传根路径</td><td><code>D:/ruoyi/uploadPath</code></td></tr>
+<tr><td>单文件大小</td><td>10MB（yml）/ 50MB（工具类）</td></tr>
+<tr><td>文件名最大长度</td><td>100 字符</td></tr>
+<tr><td>允许后缀</td><td>白名单（不含 html 等）</td></tr>
+<tr><td>头像允许后缀</td><td>bmp/gif/jpg/jpeg/png</td></tr>
+</table>
+
+<h3>11.4 Excel 导入导出</h3>
+<pre><code>// 注解驱动
+@Excel(name = "用户名", sort = 1, width = 20)
+private String userName;
+
+@Excel(name = "性别", readConverterExp = "0=男,1=女")
+private String sex;
+
+// 导出
+ExcelUtil&lt;SysUser&gt; util = new ExcelUtil&lt;&gt;(SysUser.class);
+util.exportExcel(response, list, "用户数据");
+
+// 导入
+List&lt;SysUser&gt; userList = util.importExcel(file.getInputStream());</code></pre>
+</section>
+
+<!-- ============ 第十二章 ============ -->
+<section id="ch12">
+<h2><span class="ch-num">12</span>后端统一开发规范</h2>
+
+<h3>12.1 Controller-Service-Mapper 分层规范</h3>
+<div class="flow"><span class="blue">Controller 层</span>（ruoyi-admin）
+  <span class="blue">├──</span> 继承 BaseController
+  <span class="blue">├──</span> @RestController + @RequestMapping
+  <span class="blue">├──</span> @PreAuthorize 权限注解
+  <span class="blue">├──</span> @Log 操作日志注解
+  <span class="blue">└──</span> 返回 AjaxResult / TableDataInfo
+
+<span class="blue">Service 层</span>（ruoyi-system）
+  <span class="blue">├──</span> 接口 ISysXxxService + 实现 SysXxxServiceImpl
+  <span class="blue">├──</span> @DataScope 数据权限注解
+  <span class="blue">└──</span> 业务逻辑处理
+
+<span class="blue">Mapper 层</span>（ruoyi-system）
+  <span class="blue">├──</span> 接口 SysXxxMapper
+  <span class="blue">├──</span> XML: resources/mapper/system/SysXxxMapper.xml
+  <span class="blue">└──</span> 纯 SQL 操作</div>
+
+<h3>12.2 统一返回体</h3>
+<pre><code>// 普通接口
+{ "code": 200, "msg": "操作成功", "data": {} }
+
+// 分页接口
+{ "code": 200, "msg": "查询成功", "rows": [], "total": 100 }
+
+// 分页使用
+startPage();                          // 开始分页
+List&lt;SysUser&gt; list = userService.selectUserList(user);
+return getDataTable(list);            // 包装返回</code></pre>
+
+<h3>12.3 新增业务模块完整步骤</h3>
+<div class="callout callout-info">
+<b>步骤：</b><br>
+1. <b>建表</b>：创建数据库表<br>
+2. <b>代码生成</b>：导入表 → 配置生成信息 → 预览/下载 → 放入对应目录<br>
+3. <b>执行菜单 SQL</b>：执行生成器输出的 INSERT INTO sys_menu...<br>
+4. <b>微调后端</b>：添加 @DataScope / @Log / 业务逻辑<br>
+5. <b>前端联调</b>：确认 API 路径、权限标识、路由配置
+</div>
+</section>
+
+<!-- ============ 第十三章 ============ -->
+<section id="ch13">
+<h2><span class="ch-num">13</span>定制化学习路线</h2>
+
+<h3>13.1 循序渐进学习顺序</h3>
+<table>
+<tr><th>阶段</th><th>时间</th><th>内容</th></tr>
+<tr><td>一、启动项目</td><td>1天</td><td>安装环境、导入 SQL、修改配置、前后端启动</td></tr>
+<tr><td>二、吃透三层权限</td><td>3天</td><td>登录流程、权限校验、数据权限、权限热刷新</td></tr>
+<tr><td>三、掌握安全校验</td><td>2天</td><td>文件上传安全、密码规则、XSS、防盗链</td></tr>
+<tr><td>四、熟悉代码生成器</td><td>2天</td><td>使用代码生成器、阅读 Velocity 模板、修改模板</td></tr>
+<tr><td>五、独立开发业务</td><td>3天</td><td>新建表、代码生成、微调、数据权限、联调</td></tr>
+</table>
+
+<h3>13.2 必须吃透的核心代码点位清单</h3>
+<table>
+<tr><th>序号</th><th>类名/文件</th><th>核心理解点</th></tr>
+<tr><td>1</td><td><code>TokenService</code></td><td>JWT 创建/验证/刷新/权限热刷新</td></tr>
+<tr><td>2</td><td><code>SysLoginService</code></td><td>登录全流程</td></tr>
+<tr><td>3</td><td><code>SecurityConfig</code></td><td>Spring Security 配置</td></tr>
+<tr><td>4</td><td><code>PermissionService</code></td><td>@ss.hasPermi() 权限校验</td></tr>
+<tr><td>5</td><td><code>DataScopeAspect</code></td><td>数据权限 SQL 拼接</td></tr>
+<tr><td>6</td><td><code>JwtAuthenticationTokenFilter</code></td><td>请求拦截 + Token 续期</td></tr>
+<tr><td>7</td><td><code>FileUploadUtils</code></td><td>文件上传白名单校验</td></tr>
+<tr><td>8</td><td><code>MimeTypeUtils</code></td><td>允许的文件后缀定义</td></tr>
+<tr><td>9</td><td><code>SysPasswordService</code></td><td>密码错误锁定</td></tr>
+<tr><td>10</td><td><code>SysLoginController</code></td><td>getInfo + 密码策略</td></tr>
+<tr><td>11</td><td><code>SysRoleController</code></td><td>角色修改 + 权限热刷新</td></tr>
+<tr><td>12</td><td><code>SysNoticeController</code></td><td>公告阅读记录功能</td></tr>
+<tr><td>13</td><td><code>passwordRule.js</code></td><td>前端密码校验规则</td></tr>
+<tr><td>14</td><td><code>permission.js</code></td><td>前端路由守卫</td></tr>
+<tr><td>15</td><td><code>request.js</code></td><td>Axios 拦截封装</td></tr>
+<tr><td>16</td><td><code>hasPermi.js</code></td><td>v-hasPermi 指令</td></tr>
+<tr><td>17</td><td><code>permission.js (store)</code></td><td>动态路由生成</td></tr>
+</table>
+
+<h3>13.3 实操练习任务</h3>
+<div class="card card-warn">
+<div class="card-title">新建「资产管理」业务模块</div>
+<ol>
+<li><b>建表</b>：<code>sys_asset</code>（asset_id、asset_name、asset_type、amount、dept_id 等）</li>
+<li><b>代码生成</b>：使用代码生成器生成前后端全套代码</li>
+<li><b>数据权限</b>：<code>@DataScope(deptAlias = "d")</code> 按部门过滤</li>
+<li><b>文件上传</b>：资产附件上传，限制为图片 + PDF</li>
+<li><b>密码校验</b>：操作验证使用 chrtype=4 规则</li>
+<li><b>权限配置</b>：<code>system:asset:list/add/edit/remove/export</code></li>
+<li><b>前端联调</b>：v-hasPermi、API 路径、路由配置</li>
+</ol>
+<p><b>验收标准</b>：不同角色看到各自数据范围、上传 html 被拦截、修改权限后在线用户无需重登、操作日志自动记录、Excel 导入导出正常。</p>
+</div>
+
+<div class="callout callout-success" style="margin-top:32px;">
+<b>文档说明：</b>本文档基于 RuoYi-Vue v3.9.2 全量代码扫描生成，覆盖全部 6 个 Maven 模块、前端 ruoyi-ui 工程、SQL 脚本、启动脚本、根目录配置，重点拆解了角色权限热刷新、自定义密码规则、html 文件上传拦截、公告阅读用户统计、页签层级优化等迭代新增特性。
+</div>
+
+</section>
+
+    </div>
+  </main>
+</div>
+
+<button class="back-top" id="backTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+function scrollToSection(id) {
+  document.getElementById(id).scrollIntoView({behavior:'smooth'});
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  event.target.classList.add('active');
+  if(window.innerWidth<=900) document.querySelector('.sidebar').classList.remove('open');
+}
+function toggleFold(btn) {
+  btn.classList.toggle('collapsed');
+  const content=btn.nextElementSibling;
+  content.classList.toggle('collapsed');
+}
+function searchContent() {
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('section').forEach(s=>{
+    if(s.textContent.toLowerCase().includes(q)) {
+      s.style.display='';
+    }
+  });
+}
+window.addEventListener('scroll',function(){
+  const st=window.scrollY;
+  const dh=document.body.scrollHeight-window.innerHeight;
+  const pct=dh>0?(st/dh*100):0;
+  document.getElementById('progressFill').style.width=pct+'%';
+  document.getElementById('backTop').classList.toggle('show',st>400);
+  // active nav
+  let cur='';
+  document.querySelectorAll('section').forEach(s=>{
+    if(s.offsetTop<=st+100) cur=s.id;
+  });
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    n.classList.toggle('active',n.getAttribute('onclick')&&n.getAttribute('onclick').includes(cur));
+  });
+});
+// init first active
+document.querySelector('.nav-item').classList.add('active');
+</script>
+</body>
+</html>
