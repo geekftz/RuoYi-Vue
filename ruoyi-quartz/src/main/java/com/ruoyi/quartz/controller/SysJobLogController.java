@@ -20,14 +20,19 @@ import com.ruoyi.quartz.domain.SysJobLog;
 import com.ruoyi.quartz.service.ISysJobLogService;
 
 /**
- * 调度日志操作处理
- * 
+ * 定时任务调度日志控制器
+ * <p>
+ * 管理定时任务执行日志（sys_job_log表），包括查询、导出、删除、清空。
+ * 日志由任务执行时自动记录，包含执行状态、耗时、错误信息等。
+ * </p>
+ *
  * @author ruoyi
  */
 @RestController
 @RequestMapping("/monitor/jobLog")
 public class SysJobLogController extends BaseController
 {
+    /** 定时任务日志业务层 */
     @Autowired
     private ISysJobLogService jobLogService;
 

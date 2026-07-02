@@ -33,23 +33,31 @@ import com.ruoyi.system.service.ISysRoleService;
 import com.ruoyi.system.service.ISysUserService;
 
 /**
- * 用户信息
- * 
+ * 用户信息控制器
+ * <p>
+ * 管理系统用户（sys_user表），包括查询、新增、修改、删除、导出、导入、重置密码、
+ * 状态切换（启用/停用）。用户关联角色和岗位，支持数据权限过滤。
+ * </p>
+ *
  * @author ruoyi
  */
 @RestController
 @RequestMapping("/system/user")
 public class SysUserController extends BaseController
 {
+    /** 用户业务层 */
     @Autowired
     private ISysUserService userService;
 
+    /** 角色业务层 */
     @Autowired
     private ISysRoleService roleService;
 
+    /** 部门业务层 */
     @Autowired
     private ISysDeptService deptService;
 
+    /** 岗位业务层 */
     @Autowired
     private ISysPostService postService;
 
@@ -65,6 +73,9 @@ public class SysUserController extends BaseController
         return getDataTable(list);
     }
 
+    /**
+     * 导出用户数据
+     */
     @Log(title = "用户管理", businessType = BusinessType.EXPORT)
     @PreAuthorize("@ss.hasPermi('system:user:export')")
     @PostMapping("/export")
@@ -75,6 +86,9 @@ public class SysUserController extends BaseController
         util.exportExcel(response, list, "用户数据");
     }
 
+    /**
+     * 导入用户数据
+     */
     @Log(title = "用户管理", businessType = BusinessType.IMPORT)
     @PreAuthorize("@ss.hasPermi('system:user:import')")
     @PostMapping("/importData")
@@ -87,6 +101,9 @@ public class SysUserController extends BaseController
         return success(message);
     }
 
+    /**
+     * 下载用户导入模板
+     */
     @PostMapping("/importTemplate")
     public void importTemplate(HttpServletResponse response)
     {

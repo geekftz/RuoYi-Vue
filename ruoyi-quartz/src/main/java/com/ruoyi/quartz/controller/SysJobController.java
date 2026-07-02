@@ -28,14 +28,27 @@ import com.ruoyi.quartz.util.CronUtils;
 import com.ruoyi.quartz.util.ScheduleUtils;
 
 /**
- * 调度任务信息操作处理
- * 
+ * 定时任务调度控制器
+ * <p>
+ * 管理 Quartz 定时任务（sys_job表），包括：
+ * - 查询任务列表（分页）
+ * - 新增/修改/删除定时任务
+ * - 立即执行一次任务
+ * - 暂停/恢复任务
+ * </p>
+ * <p>
+ * 支持两种调用方式：
+ * - bean 调用：通过 Spring Bean 名称和方法名调用
+ * - class 调用：通过完整类名和方法名调用
+ * </p>
+ *
  * @author ruoyi
  */
 @RestController
 @RequestMapping("/monitor/job")
 public class SysJobController extends BaseController
 {
+    /** 定时任务业务层 */
     @Autowired
     private ISysJobService jobService;
 

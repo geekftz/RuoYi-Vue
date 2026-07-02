@@ -39,18 +39,29 @@ import com.ruoyi.generator.util.VelocityInitializer;
 import com.ruoyi.generator.util.VelocityUtils;
 
 /**
- * 业务 服务层实现
- * 
+ * 代码生成 - 业务表服务实现
+ * <p>
+ * 核心业务逻辑：
+ * - 查询数据库表列表，供用户选择导入
+ * - 导入表结构，将表和字段信息存入 gen_table / gen_table_column
+ * - 预览生成的代码（根据模板引擎渲染）
+ * - 下载生成的代码压缩包
+ * - 修改代码生成配置（包名、模块名、作者等）
+ * </p>
+ *
  * @author ruoyi
  */
 @Service
 public class GenTableServiceImpl implements IGenTableService
 {
+    /** 日志记录器 */
     private static final Logger log = LoggerFactory.getLogger(GenTableServiceImpl.class);
 
+    /** 代码生成 Mapper */
     @Autowired
     private GenTableMapper genTableMapper;
 
+    /** 代码生成字段 Mapper */
     @Autowired
     private GenTableColumnMapper genTableColumnMapper;
 

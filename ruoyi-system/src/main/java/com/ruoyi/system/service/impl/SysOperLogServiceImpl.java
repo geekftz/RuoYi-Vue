@@ -8,13 +8,18 @@ import com.ruoyi.system.mapper.SysOperLogMapper;
 import com.ruoyi.system.service.ISysOperLogService;
 
 /**
- * 操作日志 服务层处理
- * 
+ * 操作日志服务实现
+ * <p>
+ * 管理用户操作日志（sys_oper_log表），由 LogAspect 切面通过 AsyncFactory 异步写入，
+ * 提供查询、删除、清空功能。
+ * </p>
+ *
  * @author ruoyi
  */
 @Service
 public class SysOperLogServiceImpl implements ISysOperLogService
 {
+    /** 操作日志 Mapper */
     @Autowired
     private SysOperLogMapper operLogMapper;
 

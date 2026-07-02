@@ -99,7 +99,7 @@ ruoyi-admin
 
 通过 `<dependencyManagement>` 声明依赖（不实际引入），子模块只需写 `groupId` + `artifactId`，无需写 `version`，保证全项目版本一致。这类似于前端 `package.json` 中的统一版本管理。
 
-> **重要说明**：当前本地仓库的 pom.xml 配置为 Spring Boot 2.5.15 + JDK 1.8。根据 README 说明，master 分支应为 Spring Boot 4.x (JDK 17+)，springboot3 分支为 Spring Boot 3.x (JDK 17+)，springboot2 分支为 Spring Boot 2.x (JDK 8+)。本仓库可能是 springboot2 分支或过渡版本。后续技术分析基于实际代码配置。
+> **重要说明**：当前本地仓库的 pom.xml 配置为 Spring Boot 2.5.15 + JDK 1.8。根据 README 说明，master 分支应为 Spring Boot 4.x (JDK 17+)，springboot3 分支为 Spring Boot 3.x (JDK 17+)，springboot2 分支为 Spring Boot 2.x (JDK 8+)。本仓库为 springboot2 分支版本（README 明确标注「本仓库为 RuoYi-Vue 的 Spring Boot 2 的版本」）。后续技术分析基于实际代码配置。
 
 ### 1.3 三大后端分支完整对比
 
@@ -109,7 +109,7 @@ ruoyi-admin
 | **Spring Boot** | 4.x | 3.x | 2.5.15 |
 | **Spring Framework** | 6.x+ | 6.x | 5.3.x |
 | **Spring Security** | 6.x+ | 6.x | 5.7.x |
-| **javax → jakarta** | 全面 jakarta 命名空间 | 全面 jakarta 命名名空间 | 保留 javax 命名空间 |
+| **javax → jakarta** | 全面 jakarta 命名空间 | 全面 jakarta 命名空间 | 保留 javax 命名空间 |
 | **MyBatis 兼容** | 需 mybatis-spring-boot-starter 3.x+ | 需 mybatis-spring-boot-starter 3.x | mybatis-spring-boot-starter 2.x |
 | **接口兼容** | JDK17 强制、jakarta 包名 | JDK17 强制、jakarta 包名 | 传统 javax 包名 |
 | **适用场景** | 最新技术栈、未来维护 | 过渡版本、逐步迁移 | 稳定成熟、社区资料丰富 |
@@ -151,7 +151,7 @@ ruoyi-admin
 
 | 技术 | 版本 | 作用详解 |
 |------|------|---------|
-| **Spring Boot** | 2.5.15 | 自动配置框架，内嵌 Tomcat，简化 Spring 应用开发。相当于后端的 Vite，一键启动无需部署 WAR 包 |
+| **Spring Boot** | 2.5.15 | 自动配置框架，内嵌 Tomcat，简化 Spring 应用开发。约定优于配置、开箱即用，相当于前端的 Vite（零配置 + 内建服务器 + 一键启动），`java -jar` 一键启动无需部署 WAR 包 |
 | **Spring Core** | 5.3.39 | IoC 容器 + DI 依赖注入。管理所有 Bean 的生命周期，相当于前端的依赖注入机制 |
 | **Spring MVC** | 5.3.39 | Web MVC 框架，处理 HTTP 请求路由、参数绑定、响应输出。`@RestController`、`@GetMapping` 等注解都来自此框架 |
 | **内嵌 Tomcat** | 9.0.112 | Servlet 容器，无需独立安装 Tomcat，`java -jar` 即可启动 Web 服务 |
@@ -221,7 +221,7 @@ Redis 在 RuoYi 中承担多种缓存角色，所有 Key 前缀定义在 `CacheC
 
 | 技术 | 版本 | 作用详解 |
 |------|------|---------|
-| **Fastjson2** | 2.0.62 | 阿里 JSON 解析器，用于 JSON 序列化/反序列化。替代 Jackson |
+| **Fastjson2** | 2.0.62 | 阿里 JSON 解析器，用于 Redis 缓存序列化。替代 Spring 默认的 Jackson Redis 序列化方案（HTTP 层仍用 Jackson） |
 | **Apache POI** | 4.1.2 | Excel 导入导出，通过 `ExcelUtil<T>` 封装，注解驱动（`@Excel` 注解） |
 | **Kaptcha** | 2.3.3 | 验证码生成，支持数学计算（`math`）和字符（`char`）两种类型 |
 | **Velocity** | 2.3 | 模板引擎，代码生成器使用 `.vm` 模板文件生成 Java/Vue/SQL 代码 |
@@ -1309,7 +1309,7 @@ xss:
 
 referer:
   enabled: false                 # 防盗链开关
-  allowed-domains: localhost,127.0.0.1,ruoyi.vip  # 允许的域名
+  allowed-domains: localhost,127.0.0.1,ruoyi.vip,www.ruoyi.vip  # 允许的域名
 ```
 
 ### 10.3 前端启动流程
@@ -1378,7 +1378,7 @@ devServer: {
 **RedisCache 封装类**（`ruoyi-common/core/redis/RedisCache.java`）：
 - 基于 Spring Data Redis 的 `RedisTemplate`
 - 提供 `setCacheObject`、`getCacheObject`、`deleteObject`、`keys` 等方法
-- 序列化配置：`RedisConfig` 中配置 `Jackson2JsonRedisSerializer`
+- 序列化配置：`RedisConfig` 中配置 `FastJson2JsonRedisSerializer`（基于 Fastjson2，非 Jackson）
 
 **权限缓存刷新三种触发方式：**
 

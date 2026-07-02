@@ -20,17 +20,25 @@ import com.ruoyi.system.domain.SysOperLog;
 import com.ruoyi.system.service.ISysOperLogService;
 
 /**
- * 操作日志记录
- * 
+ * 操作日志控制器
+ * <p>
+ * 管理用户操作日志（sys_oper_log表），由 LogAspect 切面自动记录，
+ * 包括：查询列表、导出 Excel、删除、清空。
+ * </p>
+ *
  * @author ruoyi
  */
 @RestController
 @RequestMapping("/monitor/operlog")
 public class SysOperlogController extends BaseController
 {
+    /** 操作日志业务层 */
     @Autowired
     private ISysOperLogService operLogService;
 
+    /**
+     * 查询操作日志列表
+     */
     @PreAuthorize("@ss.hasPermi('monitor:operlog:list')")
     @GetMapping("/list")
     public TableDataInfo list(SysOperLog operLog)
@@ -40,6 +48,9 @@ public class SysOperlogController extends BaseController
         return getDataTable(list);
     }
 
+    /**
+     * 导出操作日志
+     */
     @Log(title = "操作日志", businessType = BusinessType.EXPORT)
     @PreAuthorize("@ss.hasPermi('monitor:operlog:export')")
     @PostMapping("/export")
@@ -50,6 +61,9 @@ public class SysOperlogController extends BaseController
         util.exportExcel(response, list, "操作日志");
     }
 
+    /**
+     * 删除操作日志
+     */
     @Log(title = "操作日志", businessType = BusinessType.DELETE)
     @PreAuthorize("@ss.hasPermi('monitor:operlog:remove')")
     @DeleteMapping("/{operIds}")
@@ -58,6 +72,9 @@ public class SysOperlogController extends BaseController
         return toAjax(operLogService.deleteOperLogByIds(operIds));
     }
 
+    /**
+     * 清空操作日志
+     */
     @Log(title = "操作日志", businessType = BusinessType.CLEAN)
     @PreAuthorize("@ss.hasPermi('monitor:operlog:remove')")
     @DeleteMapping("/clean")

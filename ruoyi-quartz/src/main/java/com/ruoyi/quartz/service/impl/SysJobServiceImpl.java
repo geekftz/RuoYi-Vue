@@ -18,16 +18,25 @@ import com.ruoyi.quartz.util.CronUtils;
 import com.ruoyi.quartz.util.ScheduleUtils;
 
 /**
- * 定时任务调度信息 服务层
- * 
+ * 定时任务调度服务实现
+ * <p>
+ * 核心：将数据库中的任务记录（sys_job表）同步到 Quartz 调度引擎，
+ * 实现任务的动态增删改查、暂停恢复、立即执行等功能。
+ * </p>
+ * <p>
+ * Quartz 调度引擎操作委托给 ScheduleUtils 工具类完成。
+ * </p>
+ *
  * @author ruoyi
  */
 @Service
 public class SysJobServiceImpl implements ISysJobService
 {
+    /** Quartz 调度器 */
     @Autowired
     private Scheduler scheduler;
 
+    /** 定时任务 Mapper */
     @Autowired
     private SysJobMapper jobMapper;
 

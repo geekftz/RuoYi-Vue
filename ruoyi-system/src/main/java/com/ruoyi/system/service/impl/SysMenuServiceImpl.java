@@ -30,25 +30,38 @@ import com.ruoyi.system.mapper.SysRoleMenuMapper;
 import com.ruoyi.system.service.ISysMenuService;
 
 /**
- * 菜单 业务层处理
- * 
+ * 菜单管理服务实现
+ * <p>
+ * 核心职责：
+ * - 查询菜单列表和菜单树（递归构建）
+ * - 构建前端路由菜单（RouterVo），用于动态路由加载
+ * - 构建权限标识集合（如 system:user:list），用于按钮权限控制
+ * - 新增/修改/删除菜单（删除时检查子菜单是否存在）
+ * </p>
+ *
  * @author ruoyi
  */
 @Service
 public class SysMenuServiceImpl implements ISysMenuService
 {
+    /** 日志记录器 */
     private static final Logger log = LoggerFactory.getLogger(SysMenuServiceImpl.class);
 
+    /** 权限标识模板 */
     public static final String PREMISSION_STRING = "perms[\"{0}\"]";
 
+    /** 菜单根节点ID */
     public static final Long MENU_ROOT_ID = 0L;
 
+    /** 菜单 Mapper */
     @Autowired
     private SysMenuMapper menuMapper;
 
+    /** 角色 Mapper */
     @Autowired
     private SysRoleMapper roleMapper;
 
+    /** 角色菜单关联 Mapper */
     @Autowired
     private SysRoleMenuMapper roleMenuMapper;
 

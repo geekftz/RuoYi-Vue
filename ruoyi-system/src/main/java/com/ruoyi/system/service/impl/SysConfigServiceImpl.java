@@ -16,16 +16,22 @@ import com.ruoyi.system.mapper.SysConfigMapper;
 import com.ruoyi.system.service.ISysConfigService;
 
 /**
- * 参数配置 服务层实现
- * 
+ * 参数配置服务实现
+ * <p>
+ * 管理系统参数配置（sys_config表），支持 Redis 缓存。
+ * 参数查询优先从 Redis 缓存获取，不存在则查数据库并写入缓存。
+ * </p>
+ *
  * @author ruoyi
  */
 @Service
 public class SysConfigServiceImpl implements ISysConfigService
 {
+    /** 参数配置 Mapper */
     @Autowired
     private SysConfigMapper configMapper;
 
+    /** Redis 缓存 */
     @Autowired
     private RedisCache redisCache;
 

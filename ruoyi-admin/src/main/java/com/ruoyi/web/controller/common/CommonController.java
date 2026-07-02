@@ -21,26 +21,43 @@ import com.ruoyi.common.utils.file.FileUtils;
 import com.ruoyi.framework.config.ServerConfig;
 
 /**
- * 通用请求处理
- * 
+ * 通用请求控制器
+ * <p>
+ * 提供文件上传、下载等通用功能接口。所有接口路径以 /common 开头。
+ * </p>
+ * <p>
+ * 主要功能：
+ * - 文件上传（单文件/多文件）
+ * - 文件下载（通用下载/本地资源下载）
+ * </p>
+ *
  * @author ruoyi
  */
 @RestController
 @RequestMapping("/common")
 public class CommonController
 {
+    /** 日志记录器 */
     private static final Logger log = LoggerFactory.getLogger(CommonController.class);
 
+    /** 服务器配置 */
     @Autowired
     private ServerConfig serverConfig;
 
+    /** 多文件上传时文件名分隔符 */
     private static final String FILE_DELIMITER = ",";
 
     /**
-     * 通用下载请求
-     * 
+     * 通用文件下载
+     * <p>
+     * 从下载目录中下载指定文件，支持下载后自动删除源文件。
+     * 文件名合法性校验防止路径穿越攻击。
+     * </p>
+     *
      * @param fileName 文件名称
-     * @param delete 是否删除
+     * @param delete   是否下载后删除源文件
+     * @param response HTTP响应
+     * @param request  HTTP请求
      */
     @GetMapping("/download")
     public void fileDownload(String fileName, Boolean delete, HttpServletResponse response, HttpServletRequest request)
@@ -69,7 +86,11 @@ public class CommonController
     }
 
     /**
-     * 通用上传请求（单个）
+     * 通用文件上传（单个文件）
+     * <p>
+     * 将文件上传到配置的上传目录，返回访问URL和文件信息。
+     * 文件名会被重命名为唯一名称，防止重名覆盖。
+     * </p>
      */
     @PostMapping("/upload")
     public AjaxResult uploadFile(MultipartFile file) throws Exception
@@ -95,7 +116,10 @@ public class CommonController
     }
 
     /**
-     * 通用上传请求（多个）
+     * 通用文件上传（多个文件）
+     * <p>
+     * 批量上传文件，返回所有文件的URL和文件名信息（逗号分隔）。
+     * </p>
      */
     @PostMapping("/uploads")
     public AjaxResult uploadFiles(List<MultipartFile> files) throws Exception
@@ -132,7 +156,11 @@ public class CommonController
     }
 
     /**
-     * 本地资源通用下载
+     * 本地资源文件下载
+     * <p>
+     * 根据资源路径下载本地存储的文件（如用户上传的头像、附件等）。
+     * 资源路径合法性校验防止路径穿越攻击。
+     * </p>
      */
     @GetMapping("/download/resource")
     public void resourceDownload(String resource, HttpServletRequest request, HttpServletResponse response)

@@ -23,14 +23,19 @@ import com.ruoyi.system.domain.SysConfig;
 import com.ruoyi.system.service.ISysConfigService;
 
 /**
- * 参数配置 信息操作处理
- * 
+ * 参数配置控制器
+ * <p>
+ * 管理系统参数配置（sys_config表），包括查询、新增、修改、删除、导出。
+ * 参数配置支持缓存，修改后自动刷新 Redis 缓存。
+ * </p>
+ *
  * @author ruoyi
  */
 @RestController
 @RequestMapping("/system/config")
 public class SysConfigController extends BaseController
 {
+    /** 参数配置业务层 */
     @Autowired
     private ISysConfigService configService;
 
@@ -46,6 +51,9 @@ public class SysConfigController extends BaseController
         return getDataTable(list);
     }
 
+    /**
+     * 导出参数配置
+     */
     @Log(title = "参数管理", businessType = BusinessType.EXPORT)
     @PreAuthorize("@ss.hasPermi('system:config:export')")
     @PostMapping("/export")

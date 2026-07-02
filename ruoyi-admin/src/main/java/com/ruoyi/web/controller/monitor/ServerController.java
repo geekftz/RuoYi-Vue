@@ -8,14 +8,21 @@ import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.framework.web.domain.Server;
 
 /**
- * 服务器监控
- * 
+ * 服务器监控控制器
+ * <p>
+ * 提供服务器运行状态监控，包括 CPU、内存、JVM、磁盘、系统信息等。
+ * 数据通过 OSHI 库采集。
+ * </p>
+ *
  * @author ruoyi
  */
 @RestController
 @RequestMapping("/monitor/server")
 public class ServerController
 {
+    /**
+     * 获取服务器监控信息
+     */
     @PreAuthorize("@ss.hasPermi('monitor:server:list')")
     @GetMapping()
     public AjaxResult getInfo() throws Exception

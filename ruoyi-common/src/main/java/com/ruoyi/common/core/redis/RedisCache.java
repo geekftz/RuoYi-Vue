@@ -14,7 +14,20 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Component;
 
 /**
- * spring redis 工具类
+ * Redis 缓存工具类
+ * <p>
+ * 对 Spring Data Redis 的 RedisTemplate 进行封装，提供更简洁的 API。
+ * 支持：基本对象缓存、List/Set/Map 集合缓存、过期时间设置、key 模式匹配等。
+ * </p>
+ * <p>
+ * 系统中的典型使用场景：
+ * - 用户登录信息缓存（LoginUser）
+ * - 验证码缓存
+ * - 密码错误次数计数
+ * - 字典数据缓存
+ * - 系统配置缓存
+ * - 限流计数
+ * </p>
  *
  * @author ruoyi
  **/
@@ -22,6 +35,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class RedisCache
 {
+    /** Redis 操作模板 */
     @Autowired
     public RedisTemplate redisTemplate;
 

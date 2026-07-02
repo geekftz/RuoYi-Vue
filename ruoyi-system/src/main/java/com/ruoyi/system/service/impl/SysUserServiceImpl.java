@@ -33,36 +33,54 @@ import com.ruoyi.system.service.ISysDeptService;
 import com.ruoyi.system.service.ISysUserService;
 
 /**
- * 用户 业务层处理
- * 
+ * 用户管理服务实现
+ * <p>
+ * 核心职责：
+ * - 用户 CRUD 操作（sys_user表）
+ * - 用户与角色关联管理（sys_user_role表）
+ * - 用户与岗位关联管理（sys_user_post表）
+ * - 密码加密存储（BCrypt）
+ * - 校验用户名、手机号、邮箱唯一性
+ * - 导入/导出用户数据
+ * </p>
+ *
  * @author ruoyi
  */
 @Service
 public class SysUserServiceImpl implements ISysUserService
 {
+    /** 日志记录器 */
     private static final Logger log = LoggerFactory.getLogger(SysUserServiceImpl.class);
 
+    /** 用户 Mapper */
     @Autowired
     private SysUserMapper userMapper;
 
+    /** 角色 Mapper */
     @Autowired
     private SysRoleMapper roleMapper;
 
+    /** 岗位 Mapper */
     @Autowired
     private SysPostMapper postMapper;
 
+    /** 用户角色关联 Mapper */
     @Autowired
     private SysUserRoleMapper userRoleMapper;
 
+    /** 用户岗位关联 Mapper */
     @Autowired
     private SysUserPostMapper userPostMapper;
 
+    /** 系统参数配置业务层 */
     @Autowired
     private ISysConfigService configService;
 
+    /** 部门业务层 */
     @Autowired
     private ISysDeptService deptService;
 
+    /** 数据校验器 */
     @Autowired
     protected Validator validator;
 

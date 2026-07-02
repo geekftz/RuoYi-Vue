@@ -27,17 +27,26 @@ import com.ruoyi.framework.web.service.TokenService;
 import com.ruoyi.system.service.ISysUserService;
 
 /**
- * 个人信息 业务处理
- * 
+ * 个人信息控制器
+ * <p>
+ * 管理当前登录用户的个人信息，包括：
+ * - 查看个人信息
+ * - 修改基本信息（昵称、手机、邮箱等）
+ * - 修改密码（需校验旧密码）
+ * - 上传/修改头像
+ * </p>
+ *
  * @author ruoyi
  */
 @RestController
 @RequestMapping("/system/user/profile")
 public class SysProfileController extends BaseController
 {
+    /** 用户业务层 */
     @Autowired
     private ISysUserService userService;
 
+    /** 令牌服务 */
     @Autowired
     private TokenService tokenService;
 

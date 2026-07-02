@@ -30,29 +30,42 @@ import com.ruoyi.system.service.ISysRoleService;
 import com.ruoyi.system.service.ISysUserService;
 
 /**
- * 角色信息
- * 
+ * 角色信息控制器
+ * <p>
+ * 管理系统角色（sys_role表），包括查询、新增、修改、删除、导出。
+ * 角色关联菜单权限（sys_role_menu）和数据权限（sys_role_dept），
+ * 修改角色权限后自动刷新在线用户的权限缓存。
+ * </p>
+ *
  * @author ruoyi
  */
 @RestController
 @RequestMapping("/system/role")
 public class SysRoleController extends BaseController
 {
+    /** 角色业务层 */
     @Autowired
     private ISysRoleService roleService;
 
+    /** 令牌服务 */
     @Autowired
     private TokenService tokenService;
 
+    /** 权限服务 */
     @Autowired
     private SysPermissionService permissionService;
 
+    /** 用户业务层 */
     @Autowired
     private ISysUserService userService;
 
+    /** 部门业务层 */
     @Autowired
     private ISysDeptService deptService;
 
+    /**
+     * 查询角色列表
+     */
     @PreAuthorize("@ss.hasPermi('system:role:list')")
     @GetMapping("/list")
     public TableDataInfo list(SysRole role)
@@ -62,6 +75,9 @@ public class SysRoleController extends BaseController
         return getDataTable(list);
     }
 
+    /**
+     * 导出角色数据
+     */
     @Log(title = "角色管理", businessType = BusinessType.EXPORT)
     @PreAuthorize("@ss.hasPermi('system:role:export')")
     @PostMapping("/export")

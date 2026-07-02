@@ -22,12 +22,20 @@ import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.sql.SqlUtil;
 
 /**
- * web层通用数据处理
- * 
+ * Web 层通用数据处理基类
+ * <p>
+ * 所有 Controller 的父类，提供以下通用能力：
+ * - 日期类型自动转换：通过 @InitBinder 将前端传递的日期字符串自动转为 Date 对象
+ * - 分页处理：基于 PageHelper 实现物理分页，封装分页参数和结果
+ * - 统一响应：提供 success/error/warn 等统一响应方法
+ * - 用户信息获取：封装从 SecurityContext 获取当前登录用户信息的方法
+ * </p>
+ *
  * @author ruoyi
  */
 public class BaseController
 {
+    /** 日志记录器 */
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /**
@@ -48,7 +56,12 @@ public class BaseController
     }
 
     /**
-     * 设置请求分页数据
+     * 开启分页查询
+     * <p>
+     * 从请求参数中获取 pageNum、pageSize 等分页参数，
+     * 调用 PageHelper.startPage() 设置 ThreadLocal 分页参数。
+     * MyBatis 执行下一条查询时会自动拼接 LIMIT 语句实现物理分页。
+     * </p>
      */
     protected void startPage()
     {
@@ -56,13 +69,18 @@ public class BaseController
     }
 
     /**
-     * 设置请求排序数据
+     * 设置排序条件
+     * <p>
+     * 从请求参数中获取 orderByColumn 和 isAsc 排序参数，
+     * 经 SQL 注入防护处理后，调用 PageHelper.orderBy() 设置排序。
+     * </p>
      */
     protected void startOrderBy()
     {
         PageDomain pageDomain = TableSupport.buildPageRequest();
         if (StringUtils.isNotEmpty(pageDomain.getOrderBy()))
         {
+            // 防止SQL注入，只允许字母、数字、下划线
             String orderBy = SqlUtil.escapeOrderBySql(pageDomain.getOrderBy());
             PageHelper.orderBy(orderBy);
         }
@@ -77,7 +95,15 @@ public class BaseController
     }
 
     /**
-     * 响应请求分页数据
+     * 封装分页查询结果为 TableDataInfo
+     * <p>
+     * 将 PageHelper 分页查询的 List 结果封装为统一格式的 TableDataInfo，
+     * 包含：状态码、消息、数据列表、总记录数。
+     * 总记录数通过 PageInfo(list).getTotal() 获取（PageHelper 会自动拦截 COUNT 查询）。
+     * </p>
+     *
+     * @param list 分页查询结果列表
+     * @return 封装后的分页数据对象
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     protected TableDataInfo getDataTable(List<?> list)
@@ -86,6 +112,7 @@ public class BaseController
         rspData.setCode(HttpStatus.SUCCESS);
         rspData.setMsg("查询成功");
         rspData.setRows(list);
+        // 通过PageInfo获取总记录数（PageHelper拦截COUNT查询获得）
         rspData.setTotal(new PageInfo(list).getTotal());
         return rspData;
     }
@@ -139,9 +166,12 @@ public class BaseController
     }
 
     /**
-     * 响应返回结果
-     * 
-     * @param rows 影响行数
+     * 根据影响行数返回操作结果
+     * <p>
+     * 增删改操作的统一返回方法，影响行数 > 0 返回成功，否则返回失败。
+     * </p>
+     *
+     * @param rows 影响的数据库行数
      * @return 操作结果
      */
     protected AjaxResult toAjax(int rows)
@@ -150,10 +180,10 @@ public class BaseController
     }
 
     /**
-     * 响应返回结果
-     * 
-     * @param result 结果
-     * @return 操作结果
+     * 根据布尔结果返回操作结果
+     *
+     * @param result 操作结果
+     * @return AjaxResult
      */
     protected AjaxResult toAjax(boolean result)
     {

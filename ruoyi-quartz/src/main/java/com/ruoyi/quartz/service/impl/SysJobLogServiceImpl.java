@@ -8,13 +8,17 @@ import com.ruoyi.quartz.mapper.SysJobLogMapper;
 import com.ruoyi.quartz.service.ISysJobLogService;
 
 /**
- * 定时任务调度日志信息 服务层
- * 
+ * 定时任务调度日志服务实现
+ * <p>
+ * 管理定时任务执行日志的增删查，包含新增日志记录、查询日志列表、删除和清空日志。
+ * </p>
+ *
  * @author ruoyi
  */
 @Service
 public class SysJobLogServiceImpl implements ISysJobLogService
 {
+    /** 定时任务日志 Mapper */
     @Autowired
     private SysJobLogMapper jobLogMapper;
 

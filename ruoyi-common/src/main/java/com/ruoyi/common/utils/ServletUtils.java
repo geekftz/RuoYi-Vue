@@ -18,8 +18,16 @@ import com.ruoyi.common.constant.Constants;
 import com.ruoyi.common.core.text.Convert;
 
 /**
- * 客户端工具类
- * 
+ * Servlet 客户端工具类
+ * <p>
+ * 封装了从当前线程获取 HttpServletRequest/HttpServletResponse 的方法，
+ * 以及从请求中获取参数、判断 Ajax 请求、URL 编解码等常用操作。
+ * </p>
+ * <p>
+ * 核心原理：通过 RequestContextHolder.getRequestAttributes() 获取当前线程的请求上下文，
+ * 因此只能在有 HTTP 请求上下文的环境中使用（Controller、Filter 等）。
+ * </p>
+ *
  * @author ruoyi
  */
 public class ServletUtils
@@ -101,7 +109,9 @@ public class ServletUtils
     }
 
     /**
-     * 获取request
+     * 获取当前线程的 HttpServletRequest
+     *
+     * @return HTTP请求对象
      */
     public static HttpServletRequest getRequest()
     {
@@ -109,7 +119,9 @@ public class ServletUtils
     }
 
     /**
-     * 获取response
+     * 获取当前线程的 HttpServletResponse
+     *
+     * @return HTTP响应对象
      */
     public static HttpServletResponse getResponse()
     {
@@ -124,6 +136,15 @@ public class ServletUtils
         return getRequest().getSession();
     }
 
+    /**
+     * 获取当前线程的 ServletRequestAttributes
+     * <p>
+     * 通过 Spring 的 RequestContextHolder 获取当前请求上下文，
+     * 这是从非 Controller 代码（如 Service、工具类）中访问请求对象的唯一方式。
+     * </p>
+     *
+     * @return ServletRequestAttributes 请求属性对象
+     */
     public static ServletRequestAttributes getRequestAttributes()
     {
         RequestAttributes attributes = RequestContextHolder.getRequestAttributes();
@@ -131,10 +152,14 @@ public class ServletUtils
     }
 
     /**
-     * 将字符串渲染到客户端
-     * 
-     * @param response 渲染对象
-     * @param string 待渲染的字符串
+     * 将字符串渲染到客户端（直接输出 JSON 响应）
+     * <p>
+     * 用于在过滤器或拦截器中直接返回 JSON 响应，
+     * 例如：退出登录成功后返回 JSON、权限校验失败后返回 JSON。
+     * </p>
+     *
+     * @param response HTTP响应对象
+     * @param string   待渲染的字符串（通常为JSON）
      */
     public static void renderString(HttpServletResponse response, String string)
     {
@@ -152,9 +177,17 @@ public class ServletUtils
     }
 
     /**
-     * 是否是Ajax异步请求
-     * 
-     * @param request
+     * 判断是否为 Ajax 异步请求
+     * <p>
+     * 通过多种方式判断：
+     * - accept 头包含 application/json
+     * - X-Requested-With 头为 XMLHttpRequest
+     * - URI 以 .json 或 .xml 结尾
+     * - 请求参数 __ajax 为 json 或 xml
+     * </p>
+     *
+     * @param request HTTP请求对象
+     * @return true=Ajax请求，false=非Ajax请求
      */
     public static boolean isAjaxRequest(HttpServletRequest request)
     {

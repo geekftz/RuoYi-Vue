@@ -23,17 +23,25 @@ import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.system.service.ISysDictTypeService;
 
 /**
- * 数据字典信息
- * 
+ * 数据字典类型控制器
+ * <p>
+ * 管理数据字典类型（sys_dict_type表），包括查询、新增、修改、删除、导出、刷新缓存。
+ * 字典类型下挂多条字典明细数据（sys_dict_data）。
+ * </p>
+ *
  * @author ruoyi
  */
 @RestController
 @RequestMapping("/system/dict/type")
 public class SysDictTypeController extends BaseController
 {
+    /** 字典类型业务层 */
     @Autowired
     private ISysDictTypeService dictTypeService;
 
+    /**
+     * 查询字典类型列表
+     */
     @PreAuthorize("@ss.hasPermi('system:dict:list')")
     @GetMapping("/list")
     public TableDataInfo list(SysDictType dictType)
@@ -43,6 +51,9 @@ public class SysDictTypeController extends BaseController
         return getDataTable(list);
     }
 
+    /**
+     * 导出字典类型
+     */
     @Log(title = "字典类型", businessType = BusinessType.EXPORT)
     @PreAuthorize("@ss.hasPermi('system:dict:export')")
     @PostMapping("/export")

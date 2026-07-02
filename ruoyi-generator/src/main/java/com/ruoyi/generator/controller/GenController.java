@@ -38,17 +38,23 @@ import com.ruoyi.generator.service.IGenTableColumnService;
 import com.ruoyi.generator.service.IGenTableService;
 
 /**
- * 代码生成 操作处理
- * 
+ * 代码生成控制器
+ * <p>
+ * 提供代码生成器功能，根据数据库表结构自动生成 Java 实体类、Mapper、Service、Controller
+ * 以及前端 Vue 页面代码。支持预览、下载生成的代码压缩包。
+ * </p>
+ *
  * @author ruoyi
  */
 @RestController
 @RequestMapping("/tool/gen")
 public class GenController extends BaseController
 {
+    /** 代码生成业务层 */
     @Autowired
     private IGenTableService genTableService;
 
+    /** 代码生成字段业务层 */
     @Autowired
     private IGenTableColumnService genTableColumnService;
 

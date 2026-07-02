@@ -23,17 +23,26 @@ import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.system.domain.SysCache;
 
 /**
- * 缓存监控
- * 
+ * 缓存监控控制器
+ * <p>
+ * 提供 Redis 缓存的监控管理功能，包括：
+ * - 查看 Redis 运行信息（info、dbSize、命令统计）
+ * - 查看系统预定义的缓存分类（登录信息、配置、字典、验证码等）
+ * - 查看和删除指定缓存key
+ * - 清空所有缓存
+ * </p>
+ *
  * @author ruoyi
  */
 @RestController
 @RequestMapping("/monitor/cache")
 public class CacheController
 {
+    /** Redis 操作模板 */
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
+    /** 系统缓存定义列表 */
     private final static List<SysCache> caches = new ArrayList<SysCache>();
     {
         caches.add(new SysCache(CacheConstants.LOGIN_TOKEN_KEY, "用户信息"));
@@ -45,6 +54,9 @@ public class CacheController
         caches.add(new SysCache(CacheConstants.PWD_ERR_CNT_KEY, "密码错误次数"));
     }
 
+    /**
+     * 获取 Redis 监控信息（info、dbSize、命令统计）
+     */
     @PreAuthorize("@ss.hasPermi('monitor:cache:list')")
     @GetMapping()
     public AjaxResult getInfo() throws Exception
@@ -69,6 +81,9 @@ public class CacheController
         return AjaxResult.success(result);
     }
 
+    /**
+     * 获取所有缓存名称列表
+     */
     @PreAuthorize("@ss.hasPermi('monitor:cache:list')")
     @GetMapping("/getNames")
     public AjaxResult cache()
@@ -76,6 +91,9 @@ public class CacheController
         return AjaxResult.success(caches);
     }
 
+    /**
+     * 根据缓存名称获取所有缓存键名
+     */
     @PreAuthorize("@ss.hasPermi('monitor:cache:list')")
     @GetMapping("/getKeys/{cacheName}")
     public AjaxResult getCacheKeys(@PathVariable String cacheName)
@@ -84,6 +102,9 @@ public class CacheController
         return AjaxResult.success(new TreeSet<>(cacheKeys));
     }
 
+    /**
+     * 根据缓存名称和键名获取缓存值
+     */
     @PreAuthorize("@ss.hasPermi('monitor:cache:list')")
     @GetMapping("/getValue/{cacheName}/{cacheKey}")
     public AjaxResult getCacheValue(@PathVariable String cacheName, @PathVariable String cacheKey)
@@ -93,6 +114,9 @@ public class CacheController
         return AjaxResult.success(sysCache);
     }
 
+    /**
+     * 根据缓存名称清除对应的所有缓存
+     */
     @PreAuthorize("@ss.hasPermi('monitor:cache:list')")
     @DeleteMapping("/clearCacheName/{cacheName}")
     public AjaxResult clearCacheName(@PathVariable String cacheName)
@@ -102,6 +126,9 @@ public class CacheController
         return AjaxResult.success();
     }
 
+    /**
+     * 根据缓存键名清除指定缓存
+     */
     @PreAuthorize("@ss.hasPermi('monitor:cache:list')")
     @DeleteMapping("/clearCacheKey/{cacheKey}")
     public AjaxResult clearCacheKey(@PathVariable String cacheKey)
@@ -110,6 +137,9 @@ public class CacheController
         return AjaxResult.success();
     }
 
+    /**
+     * 清除所有缓存
+     */
     @PreAuthorize("@ss.hasPermi('monitor:cache:list')")
     @DeleteMapping("/clearCacheAll")
     public AjaxResult clearCacheAll()

@@ -8,13 +8,18 @@ import com.ruoyi.generator.domain.GenTableColumn;
 import com.ruoyi.generator.mapper.GenTableColumnMapper;
 
 /**
- * 业务字段 服务层实现
- * 
+ * 代码生成 - 业务字段服务实现
+ * <p>
+ * 管理代码生成器中的表字段信息（gen_table_column表），
+ * 提供查询表字段、同步数据库表结构到字段记录等功能。
+ * </p>
+ *
  * @author ruoyi
  */
 @Service
 public class GenTableColumnServiceImpl implements IGenTableColumnService 
 {
+	/** 代码生成字段 Mapper */
 	@Autowired
 	private GenTableColumnMapper genTableColumnMapper;
 

@@ -24,14 +24,19 @@ import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.system.service.ISysDeptService;
 
 /**
- * 部门信息
- * 
+ * 部门信息控制器
+ * <p>
+ * 管理部门树形结构（sys_dept表），包括查询部门树、新增、修改、删除。
+ * 部门支持树形层级关系，删除时需检查是否存在子部门。
+ * </p>
+ *
  * @author ruoyi
  */
 @RestController
 @RequestMapping("/system/dept")
 public class SysDeptController extends BaseController
 {
+    /** 部门业务层 */
     @Autowired
     private ISysDeptService deptService;
 

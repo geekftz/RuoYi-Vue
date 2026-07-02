@@ -9,13 +9,18 @@ import com.ruoyi.system.mapper.SysDictDataMapper;
 import com.ruoyi.system.service.ISysDictDataService;
 
 /**
- * 字典 业务层处理
- * 
+ * 数据字典明细服务实现
+ * <p>
+ * 管理数据字典明细数据（sys_dict_data表），
+ * 提供 CRUD 操作和字典缓存刷新功能。
+ * </p>
+ *
  * @author ruoyi
  */
 @Service
 public class SysDictDataServiceImpl implements ISysDictDataService
 {
+    /** 字典数据 Mapper */
     @Autowired
     private SysDictDataMapper dictDataMapper;
 

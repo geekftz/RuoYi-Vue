@@ -8,13 +8,18 @@ import com.ruoyi.system.mapper.SysNoticeMapper;
 import com.ruoyi.system.service.ISysNoticeService;
 
 /**
- * 公告 服务层实现
- * 
+ * 通知公告服务实现
+ * <p>
+ * 管理系统通知公告（sys_notice表），提供 CRUD 操作。
+ * 支持公告已读未读状态跟踪。
+ * </p>
+ *
  * @author ruoyi
  */
 @Service
 public class SysNoticeServiceImpl implements ISysNoticeService
 {
+    /** 公告 Mapper */
     @Autowired
     private SysNoticeMapper noticeMapper;
 

@@ -12,16 +12,22 @@ import com.ruoyi.system.mapper.SysUserPostMapper;
 import com.ruoyi.system.service.ISysPostService;
 
 /**
- * 岗位信息 服务层处理
- * 
+ * 岗位管理服务实现
+ * <p>
+ * 管理系统岗位（sys_post表），包括 CRUD 操作。
+ * 删除岗位时检查是否被用户关联。
+ * </p>
+ *
  * @author ruoyi
  */
 @Service
 public class SysPostServiceImpl implements ISysPostService
 {
+    /** 岗位 Mapper */
     @Autowired
     private SysPostMapper postMapper;
 
+    /** 用户岗位关联 Mapper */
     @Autowired
     private SysUserPostMapper userPostMapper;
 

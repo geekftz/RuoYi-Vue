@@ -25,22 +25,34 @@ import com.ruoyi.system.mapper.SysUserRoleMapper;
 import com.ruoyi.system.service.ISysRoleService;
 
 /**
- * 角色 业务层处理
- * 
+ * 角色管理服务实现
+ * <p>
+ * 核心职责：
+ * - 角色 CRUD 操作（sys_role表）
+ * - 角色与菜单权限关联管理（sys_role_menu表）
+ * - 角色与部门数据权限关联管理（sys_role_dept表）
+ * - 角色与用户关联管理（sys_user_role表）
+ * - 校验角色名称和权限字符唯一性
+ * </p>
+ *
  * @author ruoyi
  */
 @Service
 public class SysRoleServiceImpl implements ISysRoleService
 {
+    /** 角色 Mapper */
     @Autowired
     private SysRoleMapper roleMapper;
 
+    /** 角色菜单关联 Mapper */
     @Autowired
     private SysRoleMenuMapper roleMenuMapper;
 
+    /** 用户角色关联 Mapper */
     @Autowired
     private SysUserRoleMapper userRoleMapper;
 
+    /** 角色部门关联 Mapper */
     @Autowired
     private SysRoleDeptMapper roleDeptMapper;
 

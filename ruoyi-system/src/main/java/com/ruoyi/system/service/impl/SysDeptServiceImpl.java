@@ -22,16 +22,25 @@ import com.ruoyi.system.mapper.SysRoleMapper;
 import com.ruoyi.system.service.ISysDeptService;
 
 /**
- * 部门管理 服务实现
- * 
+ * 部门管理服务实现
+ * <p>
+ * 管理部门树形结构（sys_dept表），包括：
+ * - 构建部门树（递归查询子部门）
+ * - 新增/修改/删除部门（删除时检查子部门是否存在）
+ * - 校验部门名称唯一性
+ * - 查询部门下的子部门数量
+ * </p>
+ *
  * @author ruoyi
  */
 @Service
 public class SysDeptServiceImpl implements ISysDeptService
 {
+    /** 部门 Mapper */
     @Autowired
     private SysDeptMapper deptMapper;
 
+    /** 角色 Mapper */
     @Autowired
     private SysRoleMapper roleMapper;
 

@@ -24,17 +24,23 @@ import com.ruoyi.system.service.ISysNoticeReadService;
 import com.ruoyi.system.service.ISysNoticeService;
 
 /**
- * 公告 信息操作处理
- * 
+ * 通知公告控制器
+ * <p>
+ * 管理系统通知公告（sys_notice表），包括查询、新增、修改、删除。
+ * 公告类型分为通知（1）和公告（2），支持已读未读状态跟踪。
+ * </p>
+ *
  * @author ruoyi
  */
 @RestController
 @RequestMapping("/system/notice")
 public class SysNoticeController extends BaseController
 {
+    /** 公告业务层 */
     @Autowired
     private ISysNoticeService noticeService;
 
+    /** 公告已读业务层 */
     @Autowired
     private ISysNoticeReadService noticeReadService;
 

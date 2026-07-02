@@ -23,14 +23,20 @@ import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.system.service.ISysMenuService;
 
 /**
- * 菜单信息
- * 
+ * 菜单信息控制器
+ * <p>
+ * 管理系统菜单（sys_menu表），包括查询菜单树、新增、修改、删除。
+ * 菜单分为三种类型：目录（M）、菜单（C）、按钮（F）。
+ * 菜单数据用于构建前端路由和按钮权限控制。
+ * </p>
+ *
  * @author ruoyi
  */
 @RestController
 @RequestMapping("/system/menu")
 public class SysMenuController extends BaseController
 {
+    /** 菜单业务层 */
     @Autowired
     private ISysMenuService menuService;
 

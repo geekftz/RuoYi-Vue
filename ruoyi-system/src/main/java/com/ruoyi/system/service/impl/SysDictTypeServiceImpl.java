@@ -19,16 +19,23 @@ import com.ruoyi.system.mapper.SysDictTypeMapper;
 import com.ruoyi.system.service.ISysDictTypeService;
 
 /**
- * 字典 业务层处理
- * 
+ * 数据字典类型服务实现
+ * <p>
+ * 管理数据字典类型（sys_dict_type表），
+ * 新增/修改/删除时自动刷新 Redis 字典缓存，
+ * 删除字典类型时检查是否存在关联的字典明细数据。
+ * </p>
+ *
  * @author ruoyi
  */
 @Service
 public class SysDictTypeServiceImpl implements ISysDictTypeService
 {
+    /** 字典类型 Mapper */
     @Autowired
     private SysDictTypeMapper dictTypeMapper;
 
+    /** 字典数据 Mapper */
     @Autowired
     private SysDictDataMapper dictDataMapper;
 

@@ -21,20 +21,32 @@ import com.ruoyi.system.domain.SysLogininfor;
 import com.ruoyi.system.service.ISysLogininforService;
 
 /**
- * 系统访问记录
- * 
+ * 系统访问记录控制器
+ * <p>
+ * 管理用户登录日志（sys_logininfor表），包括：
+ * - 查询登录日志列表（分页）
+ * - 导出登录日志到 Excel
+ * - 删除/清空登录日志
+ * - 解锁因密码错误次数过多被锁定的用户账户
+ * </p>
+ *
  * @author ruoyi
  */
 @RestController
 @RequestMapping("/monitor/logininfor")
 public class SysLogininforController extends BaseController
 {
+    /** 系统访问记录业务层 */
     @Autowired
     private ISysLogininforService logininforService;
 
+    /** 密码校验服务 */
     @Autowired
     private SysPasswordService passwordService;
 
+    /**
+     * 查询登录日志列表
+     */
     @PreAuthorize("@ss.hasPermi('monitor:logininfor:list')")
     @GetMapping("/list")
     public TableDataInfo list(SysLogininfor logininfor)
@@ -44,6 +56,9 @@ public class SysLogininforController extends BaseController
         return getDataTable(list);
     }
 
+    /**
+     * 导出登录日志
+     */
     @Log(title = "登录日志", businessType = BusinessType.EXPORT)
     @PreAuthorize("@ss.hasPermi('monitor:logininfor:export')")
     @PostMapping("/export")
@@ -54,6 +69,9 @@ public class SysLogininforController extends BaseController
         util.exportExcel(response, list, "登录日志");
     }
 
+    /**
+     * 删除登录日志
+     */
     @PreAuthorize("@ss.hasPermi('monitor:logininfor:remove')")
     @Log(title = "登录日志", businessType = BusinessType.DELETE)
     @DeleteMapping("/{infoIds}")
@@ -62,6 +80,9 @@ public class SysLogininforController extends BaseController
         return toAjax(logininforService.deleteLogininforByIds(infoIds));
     }
 
+    /**
+     * 清空登录日志
+     */
     @PreAuthorize("@ss.hasPermi('monitor:logininfor:remove')")
     @Log(title = "登录日志", businessType = BusinessType.CLEAN)
     @DeleteMapping("/clean")
@@ -71,6 +92,13 @@ public class SysLogininforController extends BaseController
         return success();
     }
 
+    /**
+     * 解锁用户账户
+     * <p>
+     * 当用户因密码错误次数过多被锁定时，管理员可调用此接口清除 Redis 中的
+     * 密码错误次数缓存（pwd_err_cnt:{userName}），使用户可以重新尝试登录。
+     * </p>
+     */
     @PreAuthorize("@ss.hasPermi('monitor:logininfor:unlock')")
     @Log(title = "账户解锁", businessType = BusinessType.OTHER)
     @GetMapping("/unlock/{userName}")

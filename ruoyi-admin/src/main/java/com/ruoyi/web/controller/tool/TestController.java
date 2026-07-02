@@ -23,8 +23,12 @@ import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 
 /**
- * swagger 用户测试方法
- * 
+ * Swagger 接口测试控制器
+ * <p>
+ * 提供 Swagger 文档演示用的测试接口，用于验证 Swagger 配置是否正确。
+ * 非业务接口，仅用于开发环境测试。
+ * </p>
+ *
  * @author ruoyi
  */
 @Api("用户信息管理")
@@ -32,6 +36,7 @@ import io.swagger.annotations.ApiOperation;
 @RequestMapping("/test/user")
 public class TestController extends BaseController
 {
+    /** 测试用户数据存储 */
     private final static Map<Integer, UserEntity> users = new LinkedHashMap<Integer, UserEntity>();
     {
         users.put(1, new UserEntity(1, "admin", "admin123", "15888888888"));

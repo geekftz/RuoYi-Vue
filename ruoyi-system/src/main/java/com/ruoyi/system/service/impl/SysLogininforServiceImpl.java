@@ -8,14 +8,19 @@ import com.ruoyi.system.mapper.SysLogininforMapper;
 import com.ruoyi.system.service.ISysLogininforService;
 
 /**
- * 系统访问日志情况信息 服务层处理
- * 
+ * 系统访问日志服务实现
+ * <p>
+ * 管理用户登录日志（sys_logininfor表），
+ * 由 AsyncFactory 异步写入，提供查询、删除、清空、批量删除功能。
+ * </p>
+ *
  * @author ruoyi
  */
 @Service
 public class SysLogininforServiceImpl implements ISysLogininforService
 {
 
+    /** 登录日志 Mapper */
     @Autowired
     private SysLogininforMapper logininforMapper;
 

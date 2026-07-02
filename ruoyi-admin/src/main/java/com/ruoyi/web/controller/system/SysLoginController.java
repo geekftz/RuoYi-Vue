@@ -25,25 +25,34 @@ import com.ruoyi.system.service.ISysConfigService;
 import com.ruoyi.system.service.ISysMenuService;
 
 /**
- * 登录验证
- * 
+ * 登录认证控制器
+ * <p>
+ * 提供用户登录、获取用户信息、获取路由菜单等核心认证接口。
+ * 登录流程：验证码校验 → 账号密码认证 → 生成JWT令牌。
+ * </p>
+ *
  * @author ruoyi
  */
 @RestController
 public class SysLoginController
 {
+    /** 登录服务 */
     @Autowired
     private SysLoginService loginService;
 
+    /** 菜单业务层 */
     @Autowired
     private ISysMenuService menuService;
 
+    /** 权限服务 */
     @Autowired
     private SysPermissionService permissionService;
 
+    /** 令牌服务 */
     @Autowired
     private TokenService tokenService;
 
+    /** 系统参数配置业务层 */
     @Autowired
     private ISysConfigService configService;
 
@@ -106,20 +115,26 @@ public class SysLoginController
         return AjaxResult.success(menuService.buildMenus(menus));
     }
 
-    // 获取用户密码自定义配置规则
+    /**
+     * 获取用户密码自定义配置规则
+     */
     public String getSysAccountChrtype()
     {
         return Convert.toStr(configService.selectConfigByKey("sys.account.chrtype"), "0");
     }
 
-    // 检查初始密码是否提醒修改
+    /**
+     * 检查初始密码是否提醒修改
+     */
     public boolean initPasswordIsModify(Date pwdUpdateDate)
     {
         Integer initPasswordModify = Convert.toInt(configService.selectConfigByKey("sys.account.initPasswordModify"));
         return initPasswordModify != null && initPasswordModify == 1 && pwdUpdateDate == null;
     }
 
-    // 检查密码是否过期
+    /**
+     * 检查密码是否过期
+     */
     public boolean passwordIsExpiration(Date pwdUpdateDate)
     {
         Integer passwordValidateDays = Convert.toInt(configService.selectConfigByKey("sys.account.passwordValidateDays"));

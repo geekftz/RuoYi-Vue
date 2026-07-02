@@ -23,14 +23,19 @@ import com.ruoyi.system.domain.SysPost;
 import com.ruoyi.system.service.ISysPostService;
 
 /**
- * 岗位信息操作处理
- * 
+ * 岗位信息控制器
+ * <p>
+ * 管理系统岗位（sys_post表），包括查询、新增、修改、删除、导出。
+ * 删除岗位时检查是否被用户关联。
+ * </p>
+ *
  * @author ruoyi
  */
 @RestController
 @RequestMapping("/system/post")
 public class SysPostController extends BaseController
 {
+    /** 岗位业务层 */
     @Autowired
     private ISysPostService postService;
 
@@ -46,6 +51,9 @@ public class SysPostController extends BaseController
         return getDataTable(list);
     }
     
+    /**
+     * 导出岗位数据
+     */
     @Log(title = "岗位管理", businessType = BusinessType.EXPORT)
     @PreAuthorize("@ss.hasPermi('system:post:export')")
     @PostMapping("/export")

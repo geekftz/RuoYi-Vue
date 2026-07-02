@@ -26,20 +26,29 @@ import com.ruoyi.system.service.ISysDictDataService;
 import com.ruoyi.system.service.ISysDictTypeService;
 
 /**
- * 数据字典信息
- * 
+ * 数据字典明细控制器
+ * <p>
+ * 管理数据字典明细数据（sys_dict_data表），包括查询、新增、修改、删除、导出。
+ * 数据字典用于管理系统中的下拉选项、枚举值等。
+ * </p>
+ *
  * @author ruoyi
  */
 @RestController
 @RequestMapping("/system/dict/data")
 public class SysDictDataController extends BaseController
 {
+    /** 字典数据业务层 */
     @Autowired
     private ISysDictDataService dictDataService;
 
+    /** 字典类型业务层 */
     @Autowired
     private ISysDictTypeService dictTypeService;
 
+    /**
+     * 查询字典数据列表
+     */
     @PreAuthorize("@ss.hasPermi('system:dict:list')")
     @GetMapping("/list")
     public TableDataInfo list(SysDictData dictData)
@@ -49,6 +58,9 @@ public class SysDictDataController extends BaseController
         return getDataTable(list);
     }
 
+    /**
+     * 导出字典数据
+     */
     @Log(title = "字典数据", businessType = BusinessType.EXPORT)
     @PreAuthorize("@ss.hasPermi('system:dict:export')")
     @PostMapping("/export")

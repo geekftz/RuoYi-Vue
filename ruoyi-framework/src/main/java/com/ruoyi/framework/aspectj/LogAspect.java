@@ -34,14 +34,28 @@ import com.ruoyi.framework.manager.factory.AsyncFactory;
 import com.ruoyi.system.domain.SysOperLog;
 
 /**
- * 操作日志记录处理
- * 
+ * 操作日志记录切面
+ * <p>
+ * 通过 AOP 拦截带有 @Log 注解的 Controller 方法，自动记录操作日志到 sys_oper_log 表。
+ * </p>
+ * <p>
+ * 记录流程：
+ * 1. @Before：方法执行前记录开始时间（存入ThreadLocal）
+ * 2. @AfterReturning：方法正常返回后，异步保存日志
+ * 3. @AfterThrowing：方法抛出异常后，异步保存日志（含异常信息）
+ * </p>
+ * <p>
+ * 记录内容：操作人、IP、请求URL、请求方式、方法名、业务类型、操作参数、
+ * 返回结果、消耗时间、异常信息等。敏感字段（password等）会被自动过滤。
+ * </p>
+ *
  * @author ruoyi
  */
 @Aspect
 @Component
 public class LogAspect
 {
+    /** 日志记录器 */
     private static final Logger log = LoggerFactory.getLogger(LogAspect.class);
 
     /** 排除敏感属性字段 */
@@ -85,111 +99,153 @@ public class LogAspect
         handleLog(joinPoint, controllerLog, e, null);
     }
 
+    /**
+     * 日志记录核心处理方法
+     * <p>
+     * 构建SysOperLog对象，填充操作人、IP、URL、方法名、参数、返回值、消耗时间等信息，
+     * 通过异步任务保存到 sys_oper_log 表。
+     * </p>
+     *
+     * @param joinPoint   切点
+     * @param controllerLog 日志注解
+     * @param e           异常对象（正常返回时为null）
+     * @param jsonResult  方法返回值
+     */
     protected void handleLog(final JoinPoint joinPoint, Log controllerLog, final Exception e, Object jsonResult)
     {
         try
         {
-            // 获取当前的用户
+            // 获取当前登录用户
             LoginUser loginUser = SecurityUtils.getLoginUser();
 
-            // *========数据库日志=========*//
+            // 构建操作日志对象
             SysOperLog operLog = new SysOperLog();
+            // 默认状态为成功
             operLog.setStatus(BusinessStatus.SUCCESS.ordinal());
-            // 请求的地址
+            // 获取客户端IP地址
             String ip = IpUtils.getIpAddr();
             operLog.setOperIp(ip);
+            // 设置请求URL（截断为255字符防止超长）
             operLog.setOperUrl(StringUtils.substring(ServletUtils.getRequest().getRequestURI(), 0, 255));
             if (loginUser != null)
             {
+                // 设置操作人用户名
                 operLog.setOperName(loginUser.getUsername());
                 SysUser currentUser = loginUser.getUser();
                 if (StringUtils.isNotNull(currentUser) && StringUtils.isNotNull(currentUser.getDept()))
                 {
+                    // 设置操作人部门名称
                     operLog.setDeptName(currentUser.getDept().getDeptName());
                 }
             }
 
+            // 如果有异常，设置状态为失败并记录错误信息
             if (e != null)
             {
                 operLog.setStatus(BusinessStatus.FAIL.ordinal());
                 operLog.setErrorMsg(StringUtils.substring(Convert.toStr(e.getMessage(), ExceptionUtil.getExceptionMessage(e)), 0, 2000));
             }
-            // 设置方法名称
+            // 设置被调用的方法全限定名（类名.方法名()）
             String className = joinPoint.getTarget().getClass().getName();
             String methodName = joinPoint.getSignature().getName();
             operLog.setMethod(className + "." + methodName + "()");
-            // 设置请求方式
+            // 设置HTTP请求方式（GET/POST/PUT/DELETE）
             operLog.setRequestMethod(ServletUtils.getRequest().getMethod());
-            // 处理设置注解上的参数
+            // 从注解中解析业务类型、标题、操作人类型等描述信息
             getControllerMethodDescription(joinPoint, controllerLog, operLog, jsonResult);
-            // 设置消耗时间
+            // 计算并设置操作消耗时间（当前时间 - 方法开始时间）
             operLog.setCostTime(System.currentTimeMillis() - TIME_THREADLOCAL.get());
-            // 保存数据库
+            // 异步保存日志到数据库，不影响主流程性能
             AsyncManager.me().execute(AsyncFactory.recordOper(operLog));
         }
         catch (Exception exp)
         {
-            // 记录本地异常日志
+            // 日志记录本身出错时，记录本地日志但不影响业务流程
             log.error("异常信息:{}", exp.getMessage());
             exp.printStackTrace();
         }
         finally
         {
+            // 清理ThreadLocal，防止内存泄漏
             TIME_THREADLOCAL.remove();
         }
     }
 
     /**
-     * 获取注解中对方法的描述信息 用于Controller层注解
-     * 
-     * @param log 日志
-     * @param operLog 操作日志
-     * @throws Exception
+     * 从 @Log 注解中解析方法描述信息并设置到操作日志对象
+     * <p>
+     * 解析内容包括：业务类型（增删改查等）、模块标题、操作人类别、
+     * 请求参数（可选）、返回结果（可选）。
+     * </p>
+     *
+     * @param joinPoint  切点
+     * @param log        日志注解
+     * @param operLog    操作日志对象
+     * @param jsonResult 方法返回值
+     * @throws Exception 异常
      */
     public void getControllerMethodDescription(JoinPoint joinPoint, Log log, SysOperLog operLog, Object jsonResult) throws Exception
     {
-        // 设置action动作
+        // 设置业务操作类型（OTHER/INSERT/UPDATE/DELETE/GRANT/EXPORT/IMPORT/FORCE/GENCODE/CLEAN）
         operLog.setBusinessType(log.businessType().ordinal());
-        // 设置标题
+        // 设置模块标题（如"用户管理"）
         operLog.setTitle(log.title());
-        // 设置操作人类别
+        // 设置操作人类别（OTHER/WEB/MOBILE）
         operLog.setOperatorType(log.operatorType().ordinal());
-        // 是否需要保存request，参数和值
+        // 是否需要保存请求参数
         if (log.isSaveRequestData())
         {
-            // 获取参数的信息，传入到数据库中。
+            // 获取请求参数并设置到日志中
             setRequestValue(joinPoint, operLog, log.excludeParamNames());
         }
-        // 是否需要保存response，参数和值
+        // 是否需要保存返回结果
         if (log.isSaveResponseData() && StringUtils.isNotNull(jsonResult))
         {
+            // 将返回结果转为JSON字符串（截断为2000字符）
             operLog.setJsonResult(StringUtils.substring(JSON.toJSONString(jsonResult), 0, 2000));
         }
     }
 
     /**
-     * 获取请求的参数，放到log中
-     * 
-     * @param operLog 操作日志
+     * 获取请求参数并设置到操作日志中
+     * <p>
+     * 对于 PUT/POST/DELETE 请求，参数在请求体中，通过反射获取方法参数；
+     * 对于 GET 请求，参数在 URL 中，直接从请求参数Map获取。
+     * </p>
+     *
+     * @param joinPoint         切点
+     * @param operLog           操作日志对象
+     * @param excludeParamNames 需要排除的参数名（敏感参数）
      * @throws Exception 异常
      */
     private void setRequestValue(JoinPoint joinPoint, SysOperLog operLog, String[] excludeParamNames) throws Exception
     {
         String requestMethod = operLog.getRequestMethod();
+        // 获取请求参数Map
         Map<?, ?> paramsMap = ServletUtils.getParamMap(ServletUtils.getRequest());
         if (StringUtils.isEmpty(paramsMap) && StringUtils.equalsAny(requestMethod, HttpMethod.PUT.name(), HttpMethod.POST.name(), HttpMethod.DELETE.name()))
         {
+            // PUT/POST/DELETE请求体参数：通过反射获取方法参数数组并转为JSON
             String params = argsArrayToString(joinPoint.getArgs(), excludeParamNames);
             operLog.setOperParam(params);
         }
         else
         {
+            // GET请求参数：直接将参数Map转为JSON（过滤敏感字段，截断为2000字符）
             operLog.setOperParam(StringUtils.substring(JSON.toJSONString(paramsMap, excludePropertyPreFilter(excludeParamNames)), 0, PARAM_MAX_LENGTH));
         }
     }
 
     /**
-     * 参数拼装
+     * 将方法参数数组拼接为 JSON 字符串
+     * <p>
+     * 遍历参数数组，过滤掉 MultipartFile、HttpServletRequest 等非业务对象，
+     * 将剩余参数转为 JSON 并拼接，超过2000字符时截断。
+     * </p>
+     *
+     * @param paramsArray       参数数组
+     * @param excludeParamNames 需要排除的参数名
+     * @return 拼接后的JSON字符串
      */
     private String argsArrayToString(Object[] paramsArray, String[] excludeParamNames)
     {
@@ -220,7 +276,14 @@ public class LogAspect
     }
 
     /**
-     * 忽略敏感属性
+     * 创建敏感属性过滤器
+     * <p>
+     * 合并默认排除的敏感字段（password等）和注解上指定的排除字段，
+     * 返回一个 FastJSON 的属性过滤器，在序列化时自动忽略这些字段。
+     * </p>
+     *
+     * @param excludeParamNames 需要排除的参数名
+     * @return 属性过滤器
      */
     public PropertyPreExcludeFilter excludePropertyPreFilter(String[] excludeParamNames)
     {
