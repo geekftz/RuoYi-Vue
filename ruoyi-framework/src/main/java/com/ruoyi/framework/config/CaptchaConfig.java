@@ -9,12 +9,24 @@ import static com.google.code.kaptcha.Constants.*;
 
 /**
  * 验证码配置
- * 
+ * <p>
+ * 【架构位置】ruoyi-framework / config层 —— 登录验证码（Google Kaptcha）配置。
+ * 【业务链路】前端登录页请求 /captchaImage → CaptchaController 从本配置取验证码生成器出图
+ * → 答案存Redis（key带uuid）→ 前端提交 uuid+用户输入答案 → SysLoginService 比对。
+ * <p>
+ * 【两种模式】
+ * 1. captchaProducer：字符型验证码（默认4位字符）；
+ * 2. captchaProducerMath：数学计算型验证码（如 8-3=?，由 KaptchaTextCreator 生成算式），
+ *    前端/参数配置 sys.account.captchaType 决定启用哪种。
+ *
  * @author ruoyi
  */
 @Configuration
 public class CaptchaConfig
 {
+    /**
+     * 字符型验证码生成器（默认配置：黑字、阴影干扰、4个字符）
+     */
     @Bean(name = "captchaProducer")
     public DefaultKaptcha getKaptchaBean()
     {
@@ -43,6 +55,9 @@ public class CaptchaConfig
         return defaultKaptcha;
     }
 
+    /**
+     * 数学计算型验证码生成器（蓝字绿框、无噪点干扰，算式由自定义 KaptchaTextCreator 生成）
+     */
     @Bean(name = "captchaProducerMath")
     public DefaultKaptcha getKaptchaBeanMath()
     {

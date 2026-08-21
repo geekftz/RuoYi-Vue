@@ -5,6 +5,11 @@ import com.ruoyi.system.domain.SysConfig;
 
 /**
  * 参数配置 数据层
+ * <p>
+ * 【架构位置】ruoyi-system → mapper，MyBatis 数据访问接口，对应数据库表 sys_config（系统参数配置）。
+ * 【负责的数据操作】参数配置的标准 CRUD + 按键名查询（checkConfigKeyUnique 兼作「键名唯一性校验」和「按key取值」用）。
+ * 【缓存联动】Service 层读写本表后会同步刷新 Redis（sys_config: 前缀），系统运行期读配置基本走缓存不查库。
+ * 【调用方】SysConfigServiceImpl ← SysConfigController（「系统管理-参数设置」菜单）。
  * 
  * @author ruoyi
  */

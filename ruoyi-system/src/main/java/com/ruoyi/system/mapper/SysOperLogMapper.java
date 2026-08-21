@@ -5,6 +5,11 @@ import com.ruoyi.system.domain.SysOperLog;
 
 /**
  * 操作日志 数据层
+ * <p>
+ * 【架构位置】ruoyi-system → mapper，MyBatis 数据访问接口，对应数据库表 sys_oper_log（操作日志）。
+ * 【负责的数据操作】操作日志的新增（由 LogAspect 切面异步触发）、条件分页查询（支持 businessTypes 多类型筛选）、
+ * 详情查询、批量删除、清空。
+ * 【调用方】SysOperLogServiceImpl ← SysOperLogController / LogAspect。
  * 
  * @author ruoyi
  */

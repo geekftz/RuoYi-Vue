@@ -13,11 +13,25 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 
 /**
  * 时间工具类
+ * <p>
+ * 【架构位置】common/utils，全系统日期处理的核心工具类，继承Apache Commons Lang3的DateUtils获得基础能力。
+ * 【使用场景】全系统高频使用：实体类时间字段格式化、文件上传路径按日期分目录、定时任务日志记录时间等。
+ * 【核心方法速查】
+ * - getNowDate()：获取当前时间Date对象
+ * - getTime()：获取当前时间字符串 "yyyy-MM-dd HH:mm:ss"
+ * - dateTimeNow()：获取当前时间字符串 "yyyyMMddHHmmss"（常用于生成文件名/编号）
+ * - datePath()：获取日期路径 "yyyy/MM/dd"（文件上传按日期分目录）
+ * - parseDateToStr(format, date)：Date → 字符串
+ * - dateTime(format, ts)：字符串 → Date
+ * - parseDate(str)：智能解析多种格式的日期字符串
+ * - timeDistance(end, start)：计算两个时间的差值，返回"X天X小时X分钟"
+ * 【前端联动】前端传递日期参数时格式必须与后端约定一致，后端用parseDate解析时自动尝试多种格式。
  * 
  * @author ruoyi
  */
 public class DateUtils extends org.apache.commons.lang3.time.DateUtils
 {
+    /** 常用日期格式常量，避免散落各处的魔法字符串 */
     public static String YYYY = "yyyy";
 
     public static String YYYY_MM = "yyyy-MM";
@@ -28,6 +42,7 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils
 
     public static String YYYY_MM_DD_HH_MM_SS = "yyyy-MM-dd HH:mm:ss";
 
+    /** 智能解析支持的日期格式数组：parseDate()会依次尝试这些格式直到解析成功 */
     private static String[] parsePatterns = {
             "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm", "yyyy-MM", 
             "yyyy/MM/dd", "yyyy/MM/dd HH:mm:ss", "yyyy/MM/dd HH:mm", "yyyy/MM",
@@ -53,16 +68,34 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils
         return dateTimeNow(YYYY_MM_DD);
     }
 
+    /**
+     * 获取当前日期时间字符串, 格式为yyyy-MM-dd HH:mm:ss
+     * 【若依高频用法】日志记录、操作时间填充
+     * 
+     * @return 如 "2024-01-15 14:30:00"
+     */
     public static final String getTime()
     {
         return dateTimeNow(YYYY_MM_DD_HH_MM_SS);
     }
 
+    /**
+     * 获取当前日期时间字符串, 格式为yyyyMMddHHmmss
+     * 【若依高频用法】生成文件名、订单号等需要时间戳的场景
+     * 
+     * @return 如 "20240115143000"
+     */
     public static final String dateTimeNow()
     {
         return dateTimeNow(YYYYMMDDHHMMSS);
     }
 
+    /**
+     * 获取当前时间的指定格式字符串
+     * 
+     * @param format 日期格式（如YYYY_MM_DD）
+     * @return 格式化后的当前时间字符串
+     */
     public static final String dateTimeNow(final String format)
     {
         return parseDateToStr(format, new Date());
@@ -73,11 +106,25 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils
         return parseDateToStr(YYYY_MM_DD, date);
     }
 
+    /**
+     * Date → 指定格式字符串（核心转换方法，被多个方法调用）
+     * 
+     * @param format 目标格式
+     * @param date 日期对象
+     * @return 格式化后的字符串
+     */
     public static final String parseDateToStr(final String format, final Date date)
     {
         return new SimpleDateFormat(format).format(date);
     }
 
+    /**
+     * 字符串 → Date（指定格式解析，解析失败抛RuntimeException）
+     * 
+     * @param format 日期格式
+     * @param ts 日期字符串
+     * @return Date对象
+     */
     public static final Date dateTime(final String format, final String ts)
     {
         try
@@ -92,6 +139,7 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils
 
     /**
      * 日期路径 即年/月/日 如2018/08/08
+     * 【若依高频用法】文件上传时按日期分目录存储，如 /upload/2024/01/15/xxx.jpg
      */
     public static final String datePath()
     {
@@ -109,7 +157,11 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils
     }
 
     /**
-     * 日期型字符串转化为日期 格式
+     * 日期型字符串转化为日期 格式（智能解析，自动尝试12种常见格式）
+     * 【使用场景】不确定前端传来的日期字符串格式时，用此方法自动尝试解析
+     * 
+     * @param str 日期字符串（支持多种格式）
+     * @return 解析成功的Date对象，解析失败返回null（不抛异常）
      */
     public static Date parseDate(Object str)
     {
@@ -119,6 +171,7 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils
         }
         try
         {
+            // 调用父类（Apache Commons）的parseDate，传入多格式数组自动匹配
             return parseDate(str.toString(), parsePatterns);
         }
         catch (ParseException e)
@@ -129,15 +182,21 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils
 
     /**
      * 获取服务器启动时间
+     * 【使用场景】系统监控页面展示服务运行时长
      */
     public static Date getServerStartDate()
     {
+        // 通过JMX获取JVM启动时间
         long time = ManagementFactory.getRuntimeMXBean().getStartTime();
         return new Date(time);
     }
 
     /**
      * 计算相差天数
+     * 
+     * @param date1 日期1
+     * @param date2 日期2
+     * @return 相差的天数（绝对值）
      */
     public static int differentDaysByMillisecond(Date date1, Date date2)
     {
@@ -146,6 +205,7 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils
 
     /**
      * 计算时间差
+     * 【使用场景】系统监控页面展示"服务器已运行X天X小时X分钟"
      *
      * @param endDate 最后时间
      * @param startTime 开始时间
@@ -171,7 +231,10 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils
     }
 
     /**
-     * 增加 LocalDateTime ==> Date
+     * 增加 LocalDateTime ==> Date（Java8新时间API转旧Date的桥接方法）
+     * 
+     * @param temporalAccessor LocalDateTime对象
+     * @return Date对象
      */
     public static Date toDate(LocalDateTime temporalAccessor)
     {
@@ -181,6 +244,9 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils
 
     /**
      * 增加 LocalDate ==> Date
+     * 
+     * @param temporalAccessor LocalDate对象
+     * @return Date对象（时间部分为00:00:00）
      */
     public static Date toDate(LocalDate temporalAccessor)
     {

@@ -22,11 +22,20 @@ import com.ruoyi.common.utils.uuid.IdUtils;
 
 /**
  * 文件处理工具类
+ * <p>
+ * 【架构位置】ruoyi-common → utils → file，文件通用处理工具（读写/下载/编码/安全校验）。
+ * 【核心职责】
+ * 1. 文件下载：writeBytes 把磁盘文件写入响应流，setFileDownloadHeader/setAttachmentResponseHeader 处理中文文件名编码；
+ * 2. 安全校验：checkAllowDownload 防止目录穿越攻击（../），isValidFilename 校验文件名合法性；
+ * 3. 辅助：文件名/后缀提取、文件删除、路径前缀剥离。
+ * 【调用方】ruoyi-admin 的 CommonController（/common/download 通用下载）、Excel 导入的临时文件写入等。
+ * 【与 FileUploadUtils 的分工】FileUploadUtils 管「上传落盘」，本类管「下载输出 + 杂项处理」。
  * 
  * @author ruoyi
  */
 public class FileUtils
 {
+    /** 文件名允许字符正则：字母/数字/下划线/中划线/竖线/点/中文，防止特殊字符注入路径 */
     public static String FILENAME_PATTERN = "[a-zA-Z0-9_\\-\\|\\.\\u4e00-\\u9fa5]+";
 
     /**
@@ -47,6 +56,7 @@ public class FileUtils
                 throw new FileNotFoundException(filePath);
             }
             fis = new FileInputStream(file);
+            // 1KB 缓冲区分批读取，避免大文件一次性加载撑爆内存
             byte[] b = new byte[1024];
             int length;
             while ((length = fis.read(b)) > 0)
@@ -91,7 +101,9 @@ public class FileUtils
         String pathName = "";
         try
         {
+            // 根据字节内容的「魔数」推断真实图片后缀（gif/jpg/bmp/png），不信任调用方给的扩展名
             String extension = getFileExtendName(data);
+            // 生成存储相对路径：日期目录/UUID.后缀，如 2026/08/21/xxxx.jpg，按日期分目录避免单目录文件过多
             pathName = DateUtils.datePath() + "/" + IdUtils.fastUUID() + "." + extension;
             File file = FileUploadUtils.getAbsoluteFile(uploadDir, pathName);
             fos = new FileOutputStream(file);
@@ -112,6 +124,7 @@ public class FileUtils
      */
     public static String stripPrefix(String filePath)
     {
+        // Constants.RESOURCE_PREFIX = "/profile"，数据库/前端传的是带前缀的访问路径，剥掉后才是磁盘相对路径
         return StringUtils.substringAfter(filePath, Constants.RESOURCE_PREFIX);
     }
 
@@ -152,13 +165,13 @@ public class FileUtils
      */
     public static boolean checkAllowDownload(String resource)
     {
-        // 禁止目录上跳级别
+        // 禁止目录上跳级别：拦截 ../../etc/passwd 这类目录穿越攻击，下载安全的关键防线
         if (StringUtils.contains(resource, ".."))
         {
             return false;
         }
 
-        // 检查允许下载的文件规则
+        // 检查允许下载的文件规则：扩展名必须在 MimeTypeUtils.DEFAULT_ALLOWED_EXTENSION 白名单内
         if (ArrayUtils.contains(MimeTypeUtils.DEFAULT_ALLOWED_EXTENSION, FileTypeUtils.getFileType(resource)))
         {
             return true;
@@ -211,8 +224,10 @@ public class FileUtils
      */
     public static void setAttachmentResponseHeader(HttpServletResponse response, String realFileName) throws UnsupportedEncodingException
     {
+        // 百分号编码文件名，解决中文/空格在 HTTP 头中的乱码问题
         String percentEncodedFileName = percentEncode(realFileName);
 
+        // 按 RFC 5987 标准组装 Content-Disposition：filename 兼容老浏览器，filename*=utf-8'' 供现代浏览器优先采用
         StringBuilder contentDispositionValue = new StringBuilder();
         contentDispositionValue.append("attachment; filename=")
                 .append(percentEncodedFileName)
@@ -221,6 +236,7 @@ public class FileUtils
                 .append("utf-8''")
                 .append(percentEncodedFileName);
 
+        // 【前端联动】暴露 Content-Disposition 给前端 JS 读取（跨域时默认读不到自定义响应头），前端 axios 下载时从中解析文件名
         response.addHeader("Access-Control-Expose-Headers", "Content-Disposition,download-filename");
         response.setHeader("Content-disposition", contentDispositionValue.toString());
         response.setHeader("download-filename", percentEncodedFileName);
@@ -246,20 +262,25 @@ public class FileUtils
      */
     public static String getFileExtendName(byte[] photoByte)
     {
+        // 默认按 jpg 处理；以下逐字节比对「文件魔数（Magic Number）」——即文件头固定字节标识，比扩展名可靠
         String strFileExtendName = "jpg";
+        // GIF 魔数：71 73 70 56 (55|57) 97 即 ASCII "GIF8" + "7a/9a"
         if ((photoByte[0] == 71) && (photoByte[1] == 73) && (photoByte[2] == 70) && (photoByte[3] == 56)
                 && ((photoByte[4] == 55) || (photoByte[4] == 57)) && (photoByte[5] == 97))
         {
             strFileExtendName = "gif";
         }
+        // JPG 魔数：第7-10字节为 74 70 73 70 即 "JFIF"
         else if ((photoByte[6] == 74) && (photoByte[7] == 70) && (photoByte[8] == 73) && (photoByte[9] == 70))
         {
             strFileExtendName = "jpg";
         }
+        // BMP 魔数：66 77 即 "BM"
         else if ((photoByte[0] == 66) && (photoByte[1] == 77))
         {
             strFileExtendName = "bmp";
         }
+        // PNG 魔数：第2-4字节为 80 78 71 即 "PNG"
         else if ((photoByte[1] == 80) && (photoByte[2] == 78) && (photoByte[3] == 71))
         {
             strFileExtendName = "png";

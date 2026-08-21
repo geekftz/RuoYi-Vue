@@ -2,7 +2,10 @@ package com.ruoyi.framework.web.domain.server;
 
 /**
  * 系统相关信息
- * 
+ * <p>
+ * 【架构位置】服务监控VO的子对象，对应前端"服务监控"页的服务器信息卡片：
+ * 主机名、IP、操作系统、系统架构、项目运行路径，均为纯数据载体（getter/setter）。
+ *
  * @author ruoyi
  */
 public class Sys

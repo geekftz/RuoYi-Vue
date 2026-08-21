@@ -17,6 +17,16 @@ import com.ruoyi.common.utils.DateUtils;
 
 /**
  * 反射工具类. 提供调用getter/setter方法, 访问私有变量, 调用私有方法, 获取泛型类型Class, 被AOP过的真实类等工具函数.
+ * <p>
+ * 【架构位置】common/utils/reflect，反射操作统一封装。
+ * 【核心方法】
+ * - invokeGetter(obj, "dept.deptName")：调用getter链获取嵌套属性值（支持多级）
+ * - invokeSetter(obj, "userName", "admin")：调用setter设置属性值（支持多级）
+ * - getFieldValue/setFieldValue：直接读写私有字段（绕过getter/setter）
+ * - invokeMethodByName(obj, "methodName", args)：按方法名调用（自动类型转换）
+ * - getClassGenricType(clazz)：获取泛型参数的实际类型（代码生成器用）
+ * - getUserClass(instance)：获取被CGLIB代理的原始类（AOP场景）
+ * 【使用场景】ExcelUtil中通过反射读取@Excel注解的字段值；代码生成器分析表结构。
  * 
  * @author ruoyi
  */
@@ -32,8 +42,12 @@ public class ReflectUtils
     private static Logger logger = LoggerFactory.getLogger(ReflectUtils.class);
 
     /**
-     * 调用Getter方法.
-     * 支持多级，如：对象名.对象名.方法
+     * 调用Getter方法（支持多级嵌套属性，如"dept.deptName"会先调getDept()再调getDeptName()）
+     * 【使用场景】ExcelUtil导出时读取嵌套属性值
+     * 
+     * @param obj 目标对象
+     * @param propertyName 属性名（支持点号分隔的多级属性）
+     * @return 属性值
      */
     @SuppressWarnings("unchecked")
     public static <E> E invokeGetter(Object obj, String propertyName)
@@ -48,8 +62,12 @@ public class ReflectUtils
     }
 
     /**
-     * 调用Setter方法, 仅匹配方法名。
-     * 支持多级，如：对象名.对象名.方法
+     * 调用Setter方法, 仅匹配方法名（支持多级嵌套属性赋值）。
+     * 【使用场景】Excel导入时把解析出的值设到Entity属性上
+     * 
+     * @param obj 目标对象
+     * @param propertyName 属性名（支持点号分隔的多级属性）
+     * @param value 要设置的值
      */
     public static <E> void invokeSetter(Object obj, String propertyName, E value)
     {
@@ -343,7 +361,12 @@ public class ReflectUtils
 
     /**
      * 通过反射, 获得Class定义中声明的父类的泛型参数的类型.
+     * 【使用场景】代码生成器中分析Entity的泛型父类，确定实际的数据类型
      * 如无法找到, 返回Object.class.
+     * 
+     * @param clazz 目标类
+     * @param index 泛型参数索引（第一个泛型参数为0）
+     * @return 泛型参数的实际Class类型
      */
     public static Class getClassGenricType(final Class clazz, final int index)
     {
@@ -372,6 +395,13 @@ public class ReflectUtils
         return (Class) params[index];
     }
 
+    /**
+     * 获取被CGLIB代理的原始类（Spring AOP用CGLIB代理时，getClass()返回的是代理类而非原始类）
+     * 【使用场景】@Log切面中获取目标方法所在类时，需要穿透CGLIB代理拿到真实类名
+     * 
+     * @param instance 代理对象实例
+     * @return 原始类的Class对象
+     */
     public static Class<?> getUserClass(Object instance)
     {
         if (instance == null)

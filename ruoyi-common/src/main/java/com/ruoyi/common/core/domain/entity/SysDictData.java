@@ -11,6 +11,13 @@ import com.ruoyi.common.core.domain.BaseEntity;
 
 /**
  * 字典数据表 sys_dict_data
+ * <p>
+ * 【架构位置】common模块 → core/domain/entity，字典数据实体（Entity），对应sys_dict_data表。
+ * 【业务角色】字典的"值"部分：一个字典类型（如sys_user_sex）下挂多条字典数据（0=男、1=女、2=未知）。
+ * 【前后端协作】前端页面加载时调/dict/data/type/xxx拿到字典列表缓存在Vuex，
+ *             下拉框直接渲染选项；表格列用<dict-tag>组件把数据库存的"0"翻译成"男"显示。
+ *             后端则用DictUtils.getDictLabel()做同样的值→标签翻译（如Excel导出时）。
+ * 【缓存】字典数据按类型整体缓存在Redis（key=sys_dict:类型），见DictUtils。
  * 
  * @author ruoyi
  */
@@ -26,22 +33,22 @@ public class SysDictData extends BaseEntity
     @Excel(name = "字典排序", cellType = ColumnType.NUMERIC)
     private Long dictSort;
 
-    /** 字典标签 */
+    /** 字典标签（显示给人看的文本，如"男"） */
     @Excel(name = "字典标签")
     private String dictLabel;
 
-    /** 字典键值 */
+    /** 字典键值（实际存储到业务表的值，如"0"） */
     @Excel(name = "字典键值")
     private String dictValue;
 
-    /** 字典类型 */
+    /** 字典类型（关联sys_dict_type.dict_type，如"sys_user_sex"，同一类型下的字典数据为一组） */
     @Excel(name = "字典类型")
     private String dictType;
 
     /** 样式属性（其他样式扩展） */
     private String cssClass;
 
-    /** 表格字典样式 */
+    /** 表格字典样式（前端<dict-tag>组件的el-tag主题：primary/success/danger等，让不同状态值显示不同颜色） */
     private String listClass;
 
     /** 是否默认（Y是 N否） */

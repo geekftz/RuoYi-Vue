@@ -10,6 +10,13 @@ import com.ruoyi.common.core.domain.BaseEntity;
 
 /**
  * 参数配置表 sys_config
+ * <p>
+ * 【架构位置】ruoyi-system → domain，对应数据库表 sys_config（系统参数配置）。
+ * 【业务作用】「参数设置」菜单的数据载体：以 key-value 形式存系统级开关/配置，
+ * 例如 sys.user.registerEnabled（是否允许注册）、sys.index.skinName（主题皮肤）等。
+ * 【使用方式】后端用 SysConfigService.selectConfigByKey("key") 读取；读出来的值会缓存进 Redis（前缀 sys_config:）。
+ * 【与字典的区别】sys_config 管「系统开关类单值」；sys_dict 管「枚举选项类多值」。
+ * 【基类】继承 BaseEntity，自带 createBy/createTime/updateBy/updateTime/remark 审计字段。
  * 
  * @author ruoyi
  */
@@ -21,19 +28,19 @@ public class SysConfig extends BaseEntity
     @Excel(name = "参数主键", cellType = ColumnType.NUMERIC)
     private Long configId;
 
-    /** 参数名称 */
+    /** 参数名称：给人看的描述，如「用户管理-是否允许注册」 */
     @Excel(name = "参数名称")
     private String configName;
 
-    /** 参数键名 */
+    /** 参数键名：代码中读取用的 key，约定「模块.功能.配置项」三段式，如 sys.user.registerEnabled */
     @Excel(name = "参数键名")
     private String configKey;
 
-    /** 参数键值 */
+    /** 参数键值：统一用 String 存储，代码里按业务需要转成 boolean/int 等 */
     @Excel(name = "参数键值")
     private String configValue;
 
-    /** 系统内置（Y是 N否） */
+    /** 系统内置（Y是 N否）：Y 的记录禁止删除/修改键名，防止误删系统必需的配置 */
     @Excel(name = "系统内置", readConverterExp = "Y=是,N=否")
     private String configType;
 

@@ -6,6 +6,12 @@ import com.ruoyi.common.core.domain.entity.SysDictData;
 
 /**
  * 字典表 数据层
+ * <p>
+ * 【架构位置】ruoyi-system → mapper，MyBatis 数据访问接口，对应数据库表 sys_dict_data（字典数据，具体键值对）。
+ * 【负责的数据操作】字典数据 CRUD、按类型查列表（前端下拉选项的数据源）、按类型+键值查标签（值→文字翻译）、
+ * 修改字典类型名时级联同步（updateDictDataType）。
+ * 【前端联动】前端 useDict('sys_user_sex') → 调 /system/dict/data/type/xxx → 本接口 selectDictDataByType → 缓存入 Redis。
+ * 【调用方】SysDictDataServiceImpl / SysDictTypeServiceImpl。
  * 
  * @author ruoyi
  */

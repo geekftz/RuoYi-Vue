@@ -6,6 +6,10 @@ import com.ruoyi.common.core.domain.entity.SysUser;
 
 /**
  * 用户 业务层
+ * <p>
+ * 【架构位置】ruoyi-system → service，用户业务接口，实现类 SysUserServiceImpl。
+ * 【业务职责】用户管理全业务：CRUD、角色/岗位分配、密码重置、数据权限分页、Excel导入导出、登录信息回写。
+ * 【调用方】SysUserController / SysProfileController / SysLoginController（admin模块）。
  * 
  * @author ruoyi
  */

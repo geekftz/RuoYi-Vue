@@ -15,6 +15,13 @@ import com.ruoyi.common.utils.StringUtils;
 
 /**
  * 图片处理工具类
+ * <p>
+ * 【架构位置】ruoyi-common → utils → file，图片字节读取工具。
+ * 【核心职责】同时支持「网络图片（http/https）」和「本地上传目录图片」两种来源，统一读成 byte[]/InputStream。
+ * 【典型使用场景】
+ * 1. Excel 导出时把头像/商品图嵌入单元格（ExcelUtil 内部调用）；
+ * 2. 需要以字节形式加工图片（压缩、转 Base64）的场景。
+ * 【注意】读取失败只记日志返回 null，调用方需判空。
  *
  * @author ruoyi
  */
@@ -68,7 +75,7 @@ public class ImageUtils
         {
             if (url.startsWith("http"))
             {
-                // 网络地址
+                // 网络地址：走 URLConnection 远程拉取，设置连接30s/读取60s超时防止线程被挂死
                 URL urlObj = new URL(url);
                 URLConnection urlConnection = urlObj.openConnection();
                 urlConnection.setConnectTimeout(30 * 1000);
@@ -78,7 +85,8 @@ public class ImageUtils
             }
             else
             {
-                // 本机地址
+                // 本机地址：数据库里存的是 "/profile/upload/xxx.jpg" 这种访问路径，
+                // 剥掉 Constants.RESOURCE_PREFIX(/profile) 前缀后拼上 RuoYiConfig.getProfile() 真实磁盘根目录
                 String localPath = RuoYiConfig.getProfile();
                 String downloadPath = localPath + StringUtils.substringAfter(url, Constants.RESOURCE_PREFIX);
                 in = new FileInputStream(downloadPath);

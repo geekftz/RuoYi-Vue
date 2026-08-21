@@ -27,6 +27,12 @@ import com.ruoyi.common.core.text.Convert;
  * 核心原理：通过 RequestContextHolder.getRequestAttributes() 获取当前线程的请求上下文，
  * 因此只能在有 HTTP 请求上下文的环境中使用（Controller、Filter 等）。
  * </p>
+ * <p>
+ * 【若依中的典型用法】
+ * · 过滤器/拦截器里直接返回JSON：ServletUtils.renderString(response, json)（如认证失败401、重复提交拦截）；
+ * · 非Controller层取请求参数：ServletUtils.getParameter("xxx")；
+ * · 全局异常处理器判断请求类型决定是否返回JSON。
+ * </p>
  *
  * @author ruoyi
  */

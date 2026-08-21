@@ -2,6 +2,11 @@ package com.ruoyi.common.utils.sign;
 
 /**
  * Base64工具类
+ * <p>
+ * 【能力】二进制数据与Base64字符串之间的编解码。
+ * 【使用场景】文件下载时文件名编码、图片转Base64字符串传输等。
+ * 【注意】若依自行实现的Base64编解码（未使用JDK的java.util.Base64），
+ * 日常开发建议使用JDK8自带的 java.util.Base64.getEncoder()/getDecoder() 或本类的encode/decode方法。
  * 
  * @author ruoyi
  */
@@ -75,10 +80,10 @@ public final class Base64
     }
 
     /**
-     * Encodes hex octects into Base64
+     * Encodes hex octects into Base64（字节数组 → Base64字符串）
      *
-     * @param binaryData Array containing binaryData
-     * @return Encoded Base64 array
+     * @param binaryData Array containing binaryData 待编码的字节数组
+     * @return Encoded Base64 array Base64编码字符串
      */
     public static String encode(byte[] binaryData)
     {
@@ -154,10 +159,10 @@ public final class Base64
     }
 
     /**
-     * Decodes Base64 data into octects
+     * Decodes Base64 data into octects（Base64字符串 → 字节数组）
      *
-     * @param encoded string containing Base64 data
-     * @return Array containind decoded data.
+     * @param encoded string containing Base64 data Base64编码字符串
+     * @return Array containind decoded data. 解码后的字节数组
      */
     public static byte[] decode(String encoded)
     {

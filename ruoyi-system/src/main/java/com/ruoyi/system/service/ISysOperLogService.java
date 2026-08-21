@@ -5,6 +5,10 @@ import com.ruoyi.system.domain.SysOperLog;
 
 /**
  * 操作日志 服务层
+ * <p>
+ * 【架构位置】ruoyi-system → service，操作日志业务接口，实现类 SysOperLogServiceImpl。
+ * 【业务职责】操作日志的写入（LogAspect 切面异步调用 insertOperlog）、分页查询、详情、删除、清空。
+ * 【调用方】SysOperLogController（「系统监控-操作日志」）/ LogAspect（@Log 注解的切面）。
  * 
  * @author ruoyi
  */

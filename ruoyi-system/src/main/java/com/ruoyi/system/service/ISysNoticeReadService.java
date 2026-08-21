@@ -6,6 +6,10 @@ import com.ruoyi.system.domain.SysNotice;
 
 /**
  * 公告已读记录 服务层
+ * <p>
+ * 【架构位置】ruoyi-system → service，公告已读业务接口，实现类 SysNoticeReadServiceImpl（项目定制模块）。
+ * 【业务职责】未读数统计（前端角标）、标记已读（单条/批量）、带已读状态的公告列表、已读人员名单。
+ * 【调用方】SysNoticeController / SysNoticeReadController。
  *
  * @author ruoyi
  */

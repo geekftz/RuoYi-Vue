@@ -7,6 +7,11 @@ import com.ruoyi.system.domain.SysUserRole;
 
 /**
  * 角色业务层
+ * <p>
+ * 【架构位置】ruoyi-system → service，角色业务接口，实现类 SysRoleServiceImpl。
+ * 【业务职责】角色 CRUD、菜单权限分配（sys_role_menu）、数据权限范围维护（sys_role_dept）、
+ * 角色下用户的授权/取消授权、登录时按用户查角色权限标识集合。
+ * 【调用方】SysRoleController / PermissionService / DataScopeAspect（「系统管理-角色管理」菜单）。
  * 
  * @author ruoyi
  */

@@ -13,6 +13,8 @@ import com.ruoyi.system.service.ISysNoticeService;
  * 管理系统通知公告（sys_notice表），提供 CRUD 操作。
  * 支持公告已读未读状态跟踪。
  * </p>
+ * 【架构位置】ruoyi-system → service → impl，业务实现层，透传式 CRUD。
+ * 【审计字段】Controller 层在调用 insert/update 前会 setCreateBy(SecurityUtils.getUsername())，XML 中 create_time 取 sysdate()。
  *
  * @author ruoyi
  */

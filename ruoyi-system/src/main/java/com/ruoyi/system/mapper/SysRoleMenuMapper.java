@@ -5,6 +5,11 @@ import com.ruoyi.system.domain.SysRoleMenu;
 
 /**
  * 角色与菜单关联表 数据层
+ * <p>
+ * 【架构位置】ruoyi-system → mapper，MyBatis 数据访问接口，对应数据库表 sys_role_menu（角色-菜单关联，功能权限基础）。
+ * 【负责的数据操作】关联记录的增删与统计：删除菜单前检查是否已分配给角色（checkMenuExistRole）、
+ * 角色分配菜单权限时先删后插（batchRoleMenu）、删除角色时清理关联。
+ * 【调用方】SysRoleServiceImpl / SysMenuServiceImpl。
  * 
  * @author ruoyi
  */

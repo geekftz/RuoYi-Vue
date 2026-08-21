@@ -11,6 +11,10 @@ import com.ruoyi.system.service.ISysNoticeReadService;
 
 /**
  * 公告已读记录 服务层实现
+ * <p>
+ * 【架构位置】ruoyi-system → service → impl，公告已读业务实现（项目定制模块）。
+ * 【核心认知】透传式实现为主；已读/未读的判断不在 Java 内存做，全部下推给 SQL（selectNoticeListWithReadStatus 用 LEFT JOIN 一次查出），
+ * 避免「查公告列表再逐条查已读」的 N+1 问题。
  *
  * @author ruoyi
  */
@@ -22,6 +26,7 @@ public class SysNoticeReadServiceImpl implements ISysNoticeReadService
 
     /**
      * 标记已读
+     * 【幂等设计】XML 中用 insert ignore / 唯一索引兜底，重复打开同一公告不会产生重复记录
      */
     @Override
     public void markRead(Long noticeId, Long userId)

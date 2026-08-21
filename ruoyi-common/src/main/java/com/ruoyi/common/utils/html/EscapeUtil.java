@@ -4,13 +4,23 @@ import com.ruoyi.common.utils.StringUtils;
 
 /**
  * 转义和反转义工具类
+ * <p>
+ * 【架构位置】common/utils/html，XSS防护的核心执行类，被XssFilter和XssHttpServletRequestWrapper调用。
+ * 【三个核心方法】
+ * - escape(text)：转义HTML特殊字符为Unicode编码（%3C等），用于纯转义场景
+ * - unescape(content)：还原被转义的内容
+ * - clean(content)：清除所有HTML标签（最常用！XSS过滤器调用此方法清洗用户输入）
+ * 【工作流程】用户提交含<script>alert(1)</script>的表单 → XssFilter拦截 → EscapeUtil.clean()清洗 →
+ * <script>标签被移除，存库的是安全文本。
  * 
  * @author ruoyi
  */
 public class EscapeUtil
 {
+    /** HTML标签的正则匹配模式 */
     public static final String RE_HTML_MARK = "(<[^<]*?>)|(<[\\s]*?/[^<]*?>)|(<[^<]*?/[\\s]*?>)";
 
+    /** HTML特殊字符转义映射表：单引号/双引号/&/</>分别映射为HTML实体编码 */
     private static final char[][] TEXT = new char[64][];
 
     static
@@ -29,7 +39,7 @@ public class EscapeUtil
     }
 
     /**
-     * 转义文本中的HTML字符为安全的字符
+     * 转义文本中的HTML字符为安全的字符（将<>&"'转为HTML实体编码）
      * 
      * @param text 被转义的文本
      * @return 转义后的文本
@@ -40,7 +50,7 @@ public class EscapeUtil
     }
 
     /**
-     * 还原被转义的HTML特殊字符
+     * 还原被转义的HTML特殊字符（escape的逆操作）
      * 
      * @param content 包含转义符的HTML内容
      * @return 转换后的字符串
@@ -51,10 +61,11 @@ public class EscapeUtil
     }
 
     /**
-     * 清除所有HTML标签，但是不删除标签内的内容
+     * 清除所有HTML标签，但是不删除标签内的内容（XSS防护的核心方法）
+     * 【若依高频用法】XssFilter/XssHttpServletRequestWrapper中调用此方法清洗用户输入
      * 
      * @param content 文本
-     * @return 清除标签后的文本
+     * @return 清除标签后的文本，如"<script>alert(1)</script>"→"alert(1)"
      */
     public static String clean(String content)
     {

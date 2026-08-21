@@ -5,6 +5,10 @@ import com.ruoyi.system.domain.SysPost;
 
 /**
  * 岗位信息 服务层
+ * <p>
+ * 【架构位置】ruoyi-system → service，岗位业务接口，实现类 SysPostServiceImpl。
+ * 【业务职责】岗位 CRUD、名称/编码唯一校验、删除前占用检查、按用户查已分配岗位（用户表单回显）、Excel导出。
+ * 【调用方】SysPostController / SysUserController（「系统管理-岗位管理」菜单）。
  * 
  * @author ruoyi
  */

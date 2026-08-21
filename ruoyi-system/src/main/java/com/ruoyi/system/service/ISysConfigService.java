@@ -5,6 +5,11 @@ import com.ruoyi.system.domain.SysConfig;
 
 /**
  * 参数配置 服务层
+ * <p>
+ * 【架构位置】ruoyi-system → service，参数配置业务接口，实现类 SysConfigServiceImpl。
+ * 【业务职责】sys_config 表 CRUD + Redis 缓存同步（增删改后刷新缓存）；selectConfigByKey 是全系统读配置的入口，
+ * 例如登录时读「sys.account.captchaEnabled」决定是否校验验证码。
+ * 【调用方】SysConfigController / SysLoginService / SysRegisterService 等。
  * 
  * @author ruoyi
  */

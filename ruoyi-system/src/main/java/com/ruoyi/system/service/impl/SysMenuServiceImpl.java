@@ -38,6 +38,11 @@ import com.ruoyi.system.service.ISysMenuService;
  * - 构建权限标识集合（如 system:user:list），用于按钮权限控制
  * - 新增/修改/删除菜单（删除时检查子菜单是否存在）
  * </p>
+ * 【架构位置】业务层 ServiceImpl，对应 SysMenuController + SysLoginController(getRouters)。
+ * 【前后端联动核心】菜单表 sys_menu 是前后端权限体系的桥梁：
+ * 1. 前端登录后调 /getRouters → 本类 buildMenus() 生成 Vue Router 动态路由 JSON；
+ * 2. 前端调 /getInfo → selectMenuPermsByUserId() 返回权限串集合，控制按钮显隐（v-hasPermi）；
+ * 3. 后端 @PreAuthorize("@ss.hasPermi('system:user:list')") 也校验同一套 perms。
  *
  * @author ruoyi
  */
@@ -90,10 +95,13 @@ public class SysMenuServiceImpl implements ISysMenuService
         // 管理员显示所有菜单信息
         if (SecurityUtils.isAdmin(userId))
         {
+            // 超管（userId=1）无条件查全部
             menuList = menuMapper.selectMenuList(menu);
         }
         else
         {
+            // 普通用户：把 userId 塞进 params（BaseEntity 的扩展 Map），
+            // XML 中据此 join sys_user_role/sys_role_menu 只查该用户角色拥有的菜单
             menu.getParams().put("userId", userId);
             menuList = menuMapper.selectMenuListByUserId(menu);
         }
@@ -109,12 +117,16 @@ public class SysMenuServiceImpl implements ISysMenuService
     @Override
     public Set<String> selectMenuPermsByUserId(Long userId)
     {
+        // 【调用链路】登录成功后 SysPermissionService.getMenuPermission() 调用，
+        // 结果存入 LoginUser.permissions → 缓存进 Redis，
+        // 之后每个请求的 @PreAuthorize("@ss.hasPermi('xxx')") 都与这个集合比对
         List<String> perms = menuMapper.selectMenuPermsByUserId(userId);
         Set<String> permsSet = new HashSet<>();
         for (String perm : perms)
         {
             if (StringUtils.isNotEmpty(perm))
             {
+                // perms 字段支持逗号分隔多个权限串，拆分去重
                 permsSet.addAll(Arrays.asList(perm.trim().split(",")));
             }
         }
@@ -152,14 +164,17 @@ public class SysMenuServiceImpl implements ISysMenuService
     public List<SysMenu> selectMenuTreeByUserId(Long userId)
     {
         List<SysMenu> menus = null;
+        // 超管查全部目录+菜单（不含按钮 F 类型，见 XML where 条件）
         if (SecurityUtils.isAdmin(userId))
         {
             menus = menuMapper.selectMenuTreeAll();
         }
         else
         {
+            // 普通用户只查其角色拥有的菜单
             menus = menuMapper.selectMenuTreeByUserId(userId);
         }
+        // 从根节点 0 开始递归组装成树，供 buildMenus 生成路由
         return getChildPerms(menus, MENU_ROOT_ID);
     }
 
@@ -185,25 +200,34 @@ public class SysMenuServiceImpl implements ISysMenuService
     @Override
     public List<RouterVo> buildMenus(List<SysMenu> menus)
     {
+        // 【前端联动】这是后端生成 Vue Router 动态路由的核心方法！
+        // 前端登录后 permission.js 调 getRouters() 拿到本方法返回的 JSON，
+        // 再 addRoute 动态注册路由。RouterVo 的字段（path/component/meta/hidden/children）
+        // 与 Vue Router 的路由配置一一对应。
         List<RouterVo> routers = new LinkedList<RouterVo>();
         for (SysMenu menu : menus)
         {
             RouterVo router = new RouterVo();
+            // visible=1（隐藏）→ 前端侧边栏不渲染该菜单，但路由仍可访问（如详情页）
             router.setHidden("1".equals(menu.getVisible()));
             router.setName(getRouteName(menu));
             router.setPath(getRouterPath(menu));
             router.setComponent(getComponent(menu));
             router.setQuery(menu.getQuery());
+            // meta 存标题/图标/是否缓存，对应 Vue Router 的 meta 字段（前端面包屑、页签缓存都读它）
             router.setMeta(new MetaVo(menu.getMenuName(), menu.getIcon(), StringUtils.equals("1", menu.getIsCache()), menu.getPath()));
             List<SysMenu> cMenus = menu.getChildren();
             if (StringUtils.isNotEmpty(cMenus) && UserConstants.TYPE_DIR.equals(menu.getMenuType()))
             {
+                // 目录类型：有子菜单时 alwaysShow=true 保证侧边栏展开，redirect=noRedirect 表示目录本身不可点击
                 router.setAlwaysShow(true);
                 router.setRedirect("noRedirect");
                 router.setChildren(buildMenus(cMenus));
             }
             else if (isMenuFrame(menu))
             {
+                // 一级菜单（parentId=0 且类型为菜单）：Vue Router 要求必须挂在布局组件 Layout 下，
+                // 所以包装一层 path="/" 的父路由，真正的页面放 children 里
                 router.setMeta(null);
                 List<RouterVo> childrenList = new ArrayList<RouterVo>();
                 RouterVo children = new RouterVo();
@@ -217,6 +241,7 @@ public class SysMenuServiceImpl implements ISysMenuService
             }
             else if (menu.getParentId().intValue() == MENU_ROOT_ID && isInnerLink(menu))
             {
+                // 内链（站内嵌外部http页面）：同样包装 Layout，component 固定为 InnerLink 组件（iframe 实现）
                 router.setMeta(new MetaVo(menu.getMenuName(), menu.getIcon()));
                 router.setPath("/");
                 List<RouterVo> childrenList = new ArrayList<RouterVo>();
@@ -347,6 +372,7 @@ public class SysMenuServiceImpl implements ISysMenuService
     @Transactional
     public void updateMenuSort(String[] menuIds, String[] orderNums)
     {
+        // 【事务范围】批量更新排序，任一失败整体回滚
         try
         {
             for (int i = 0; i < menuIds.length; i++)
@@ -402,9 +428,11 @@ public class SysMenuServiceImpl implements ISysMenuService
     @Override
     public boolean checkRouteConfigUnique(SysMenu menu)
     {
+        // 路由配置唯一性校验（防止生成冲突的 Vue Router 配置导致前端页面错乱），需检测三种冲突
         Long menuId = StringUtils.isNull(menu.getMenuId()) ? -1L : menu.getMenuId();
         Long parentId = menu.getParentId();
         String path = menu.getPath();
+        // 没填路由名称时用 path 代替
         String routeName = StringUtils.isEmpty(menu.getRouteName()) ? path : menu.getRouteName();
         List<SysMenu> sysMenuList = menuMapper.selectMenusByPathOrRouteName(path, routeName);
         for (SysMenu sysMenu : sysMenuList)
@@ -416,16 +444,19 @@ public class SysMenuServiceImpl implements ISysMenuService
                 String dbRouteName = StringUtils.isEmpty(sysMenu.getRouteName()) ? dbPath : sysMenu.getRouteName();
                 if (StringUtils.equalsAnyIgnoreCase(path, dbPath) && parentId.longValue() == dbParentId.longValue())
                 {
+                    // 冲突①：同一父级下 path 重复（同级路由路径必须唯一）
                     log.warn("[同级路由冲突] 同级下已存在相同路由路径 '{}'，冲突菜单：{}", dbPath, sysMenu.getMenuName());
                     return UserConstants.NOT_UNIQUE;
                 }
                 else if (StringUtils.equalsAnyIgnoreCase(path, dbPath) && parentId.longValue() == MENU_ROOT_ID)
                 {
+                    // 冲突②：根目录下 path 重复（一级路由全局唯一）
                     log.warn("[根目录路由冲突] 根目录下路由 '{}' 必须唯一，已被菜单 '{}' 占用", path, sysMenu.getMenuName());
                     return UserConstants.NOT_UNIQUE;
                 }
                 else if (StringUtils.equalsAnyIgnoreCase(routeName, dbRouteName))
                 {
+                    // 冲突③：路由名称全局重复（Vue Router 的 name 用于 keep-alive 缓存与跳转，必须唯一）
                     log.warn("[路由名称冲突] 路由名称 '{}' 需全局唯一，已被菜单 '{}' 使用", routeName, sysMenu.getMenuName());
                     return UserConstants.NOT_UNIQUE;
                 }
@@ -445,6 +476,7 @@ public class SysMenuServiceImpl implements ISysMenuService
         // 非外链并且是一级目录（类型为目录）
         if (isMenuFrame(menu))
         {
+            // 一级菜单的父路由只是 Layout 包装层，name 置空（真正的 name 在 children 上）
             return StringUtils.EMPTY;
         }
         return getRouteName(menu.getRouteName(), menu.getPath());
@@ -460,6 +492,7 @@ public class SysMenuServiceImpl implements ISysMenuService
     public String getRouteName(String name, String path)
     {
         String routerName = StringUtils.isNotEmpty(name) ? name : path;
+        // 首字母大写转驼峰：Vue Router 的 name 约定大写开头（如 SystemUser），keep-alive 的 include 按 name 匹配
         return StringUtils.capitalize(routerName);
     }
 
@@ -475,17 +508,20 @@ public class SysMenuServiceImpl implements ISysMenuService
         // 内链打开外网方式
         if (menu.getParentId().intValue() != MENU_ROOT_ID && isInnerLink(menu))
         {
+            // 非根节点的内链：把 http://www.xxx.com 转成 xxx/com 形式的合法路由路径
             routerPath = innerLinkReplaceEach(routerPath);
         }
         // 非外链并且是一级目录（类型为目录）
         if (MENU_ROOT_ID == menu.getParentId().intValue() && UserConstants.TYPE_DIR.equals(menu.getMenuType())
                 && UserConstants.NO_FRAME.equals(menu.getIsFrame()))
         {
+            // 一级目录拼前辍 /，符合 Vue Router 绝对路径规范
             routerPath = "/" + menu.getPath();
         }
         // 非外链并且是一级目录（类型为菜单）
         else if (isMenuFrame(menu))
         {
+            // 一级菜单固定 path="/"（它是 Layout 包装层，真实 path 在 children）
             routerPath = "/";
         }
         return routerPath;
@@ -499,17 +535,21 @@ public class SysMenuServiceImpl implements ISysMenuService
      */
     public String getComponent(SysMenu menu)
     {
+        // 默认 Layout（前端布局组件，含侧边栏+导航栏），对应前端 layout/index.vue
         String component = UserConstants.LAYOUT;
         if (StringUtils.isNotEmpty(menu.getComponent()) && !isMenuFrame(menu))
         {
+            // 配了组件路径（如 system/user/index）则用它，前端会动态 import('@/views/' + component)
             component = menu.getComponent();
         }
         else if (StringUtils.isEmpty(menu.getComponent()) && menu.getParentId().intValue() != MENU_ROOT_ID && isInnerLink(menu))
         {
+            // 内链页面用 InnerLink 组件（iframe 加载外部页面）
             component = UserConstants.INNER_LINK;
         }
         else if (StringUtils.isEmpty(menu.getComponent()) && isParentView(menu))
         {
+            // 非一级目录没配组件：用 ParentView（仅一个 router-view，做纯路由过渡）
             component = UserConstants.PARENT_VIEW;
         }
         return component;
@@ -523,6 +563,7 @@ public class SysMenuServiceImpl implements ISysMenuService
      */
     public boolean isMenuFrame(SysMenu menu)
     {
+        // "一级菜单"判定：挂在根节点 + 菜单类型（非目录）+ 非外链
         return menu.getParentId().intValue() == MENU_ROOT_ID && UserConstants.TYPE_MENU.equals(menu.getMenuType())
                 && menu.getIsFrame().equals(UserConstants.NO_FRAME);
     }
@@ -546,6 +587,7 @@ public class SysMenuServiceImpl implements ISysMenuService
      */
     public boolean isInnerLink(SysMenu menu)
     {
+        // 内链判定：非外链跳转（isFrame=0）但 path 是 http(s) 开头的网址 → 站内 iframe 打开
         return menu.getIsFrame().equals(UserConstants.NO_FRAME) && StringUtils.ishttp(menu.getPath());
     }
 
@@ -625,6 +667,8 @@ public class SysMenuServiceImpl implements ISysMenuService
      */
     public String innerLinkReplaceEach(String path)
     {
+        // 把 http://www.ruoyi.vip:80 形式的 URL 转成 ruoyi/vip/80 形式的路由路径
+        // StringUtils.replaceEach：多对多批量替换（Apache 工具），按数组对应位置替换
         return StringUtils.replaceEach(path, new String[] { Constants.HTTP, Constants.HTTPS, Constants.WWW, ".", ":" },
                 new String[] { "", "", "", "/", "/" });
     }

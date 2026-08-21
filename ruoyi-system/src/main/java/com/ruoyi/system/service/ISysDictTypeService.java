@@ -6,6 +6,11 @@ import com.ruoyi.common.core.domain.entity.SysDictType;
 
 /**
  * 字典 业务层
+ * <p>
+ * 【架构位置】ruoyi-system → service，字典类型业务接口，实现类 SysDictTypeServiceImpl。
+ * 【业务职责】sys_dict_type 表 CRUD、字典缓存加载/刷新/清空（项目启动时 loadingDictCache 全量入 Redis）、
+ * 修改类型名时级联同步字典数据。
+ * 【调用方】SysDictTypeController（「系统管理-字典管理」）。
  * 
  * @author ruoyi
  */

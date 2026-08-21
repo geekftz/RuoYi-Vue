@@ -23,11 +23,19 @@ import oshi.util.Util;
 
 /**
  * 服务器相关信息
- * 
+ * <p>
+ * 【架构位置】ruoyi-framework / web / domain层 —— "服务监控"页面的数据聚合VO。
+ * 【调用链路】前端 系统监控-服务监控 → GET /monitor/server → ServerController
+ * → new Server() 后调用 copyTo() → 通过 OSHI 库采集本机CPU/内存/磁盘 + JVM运行时信息
+ * → 组装成本对象返回前端渲染仪表盘。
+ * <p>
+ * 【技术点】OSHI（Operating System and Hardware Information）跨平台系统信息库，无需本地命令即可采集硬件指标。
+ *
  * @author ruoyi
  */
 public class Server
 {
+    /** OSHI两次采样CPU Tick的间隔毫秒数：CPU使用率 = 间隔内各类时间差占比，必须等间隔才能算准 */
     private static final int OSHI_WAIT_SECOND = 1000;
     
     /**
@@ -105,6 +113,10 @@ public class Server
         this.sysFiles = sysFiles;
     }
 
+    /**
+     * 采集入口：把CPU/内存/系统/JVM/磁盘信息填充进本对象
+     * 被 ServerController.getInfo() 调用，调用后直接把本对象返回前端
+     */
     public void copyTo() throws Exception
     {
         SystemInfo si = new SystemInfo();
@@ -123,6 +135,9 @@ public class Server
 
     /**
      * 设置CPU信息
+     * <p>
+     * 【采集原理】CPU使用率无法瞬时值读取：先取一次各状态累计tick，睡眠1秒后再取一次，
+     * 两次差值即为这1秒内CPU在用户态/内核态/IO等待/空闲上的时间分配，据此算占比
      */
     private void setCpuInfo(CentralProcessor processor)
     {
@@ -158,7 +173,7 @@ public class Server
     }
 
     /**
-     * 设置服务器信息
+     * 设置服务器信息（读Java系统属性os.name/os.arch/user.dir + 本机主机名/IP）
      */
     private void setSysInfo()
     {
@@ -171,7 +186,7 @@ public class Server
     }
 
     /**
-     * 设置Java虚拟机
+     * 设置Java虚拟机信息（Runtime获取堆内存总量/上限/空闲，系统属性取JDK版本与安装路径）
      */
     private void setJvmInfo() throws UnknownHostException
     {
@@ -184,7 +199,8 @@ public class Server
     }
 
     /**
-     * 设置磁盘信息
+     * 设置磁盘信息：遍历操作系统所有文件存储（盘符/挂载点），计算容量与使用率
+     * 使用率用 Arith 高精度计算（避免double直接除法精度丢失）
      */
     private void setSysFiles(OperatingSystem os)
     {
@@ -209,6 +225,8 @@ public class Server
 
     /**
      * 字节转换
+     * <p>
+     * 把字节数格式化为人类可读单位：>=1G显示GB，>=1M显示MB，>=1K显示KB，否则B
      * 
      * @param size 字节大小
      * @return 转换后值

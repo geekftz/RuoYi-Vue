@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+    <!--
+        【Logback日志配置】Spring Boot默认日志框架，启动时自动加载本文件。
+        输出三类日志文件（logs目录下）：
+        1. sys-info.log   —— 系统普通运行日志（INFO级）
+        2. sys-error.log  —— 系统错误日志（ERROR级，排查问题首先看它）
+        3. sys-user.log   —— 用户操作关键日志（ShutdownManager等用 LoggerFactory.getLogger("sys-user") 写入）
+    -->
     <!-- 日志存放路径 -->
 <!--	<property name="log.path" value="/home/ruoyi/logs" />-->
+    <!-- 当前配置为项目根目录下 ./logs；生产环境建议改为上面的绝对路径 -->
     <property name="log.path" value="./logs"/>
-    <!-- 日志输出格式 -->
+    <!-- 日志输出格式：时间 [线程名] 级别 类名 - [方法,行号] - 消息 -->
 	<property name="log.pattern" value="%d{HH:mm:ss.SSS} [%thread] %-5level %logger{20} - [%method,%line] - %msg%n" />
 
 	<!-- 控制台输出 -->
@@ -13,7 +21,7 @@
 		</encoder>
 	</appender>
 	
-	<!-- 系统日志输出 -->
+	<!-- 系统日志输出：滚动文件appender，按天生成新文件，仅记录INFO级 -->
 	<appender name="file_info" class="ch.qos.logback.core.rolling.RollingFileAppender">
 	    <file>${log.path}/sys-info.log</file>
         <!-- 循环政策：基于时间创建日志文件 -->
@@ -36,6 +44,7 @@
         </filter>
 	</appender>
 	
+	<!-- 系统错误日志输出：仅记录ERROR级，线上排查异常的入口文件 -->
 	<appender name="file_error" class="ch.qos.logback.core.rolling.RollingFileAppender">
 	    <file>${log.path}/sys-error.log</file>
         <!-- 循环政策：基于时间创建日志文件 -->
@@ -58,7 +67,7 @@
         </filter>
     </appender>
 	
-	<!-- 用户访问日志输出  -->
+	<!-- 用户访问日志输出：代码中 LoggerFactory.getLogger("sys-user") 获得的logger写入此文件  -->
     <appender name="sys-user" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>${log.path}/sys-user.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -72,11 +81,12 @@
         </encoder>
     </appender>
 	
-	<!-- 系统模块日志级别控制  -->
+	<!-- 系统模块日志级别控制：com.ruoyi包下类输出info及以上  -->
 	<logger name="com.ruoyi" level="info" />
-	<!-- Spring日志级别控制  -->
+	<!-- Spring日志级别控制：框架自身日志只输出warn及以上，避免刷屏  -->
 	<logger name="org.springframework" level="warn" />
 
+	<!-- 根日志：控制台输出（开发时看IDE控制台） -->
 	<root level="info">
 		<appender-ref ref="console" />
 	</root>

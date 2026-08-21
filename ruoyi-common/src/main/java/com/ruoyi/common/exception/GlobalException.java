@@ -2,6 +2,10 @@ package com.ruoyi.common.exception;
 
 /**
  * 全局异常
+ * <p>
+ * 【定位】通用兜底异常，与ServiceException职责相近（历史遗留，两者并存）。
+ * 【实际使用】项目中业务代码主要抛ServiceException；GlobalException偶见于需要区分"系统级"与"业务级"的场景。
+ * 【处理链路】同样被GlobalExceptionHandler捕获，加工成AjaxResult返回前端。
  * 
  * @author ruoyi
  */

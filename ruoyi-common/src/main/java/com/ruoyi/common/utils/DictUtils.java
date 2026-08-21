@@ -11,19 +11,27 @@ import com.ruoyi.common.core.redis.RedisCache;
 import com.ruoyi.common.utils.spring.SpringUtils;
 
 /**
- * 字典工具类
- * 
+ * 字典工具类（若依核心工具）
+ * <p>
+ * 【架构位置】ruoyi-common / utils层 —— 数据字典的缓存读写与"值↔标签"互转工具。
+ * 【数据字典是什么】把状态码与中文标签解耦：如 sys_user.sex 存 0/1/2，
+ * 字典表 sys_dict_data 中 0=男 1=女 2=未知；前端用 useDict('sys_user_sex') 渲染下拉框。
+ * <p>
+ * 【缓存机制】字典数据缓存于Redis（key: sys_dict:字典类型），由 SysDictTypeService 在增删改字典时维护；
+ * 本类通过 SpringUtils.getBean(RedisCache.class) 静态方式访问缓存。
+ * 【典型场景】Excel导出时把字典值翻译成标签：@Excel(readConverterExp="0=男,1=女") 底层等价于 getDictLabel()。
+ *
  * @author ruoyi
  */
 public class DictUtils
 {
     /**
-     * 分隔符
+     * 分隔符：一个字段存多个字典值时的分隔符（如 "0,1" → "男,女"）
      */
     public static final String SEPARATOR = ",";
 
     /**
-     * 设置字典缓存
+     * 设置字典缓存（字典数据变更时由 SysDictTypeService 调用刷新Redis）
      * 
      * @param key 参数键
      * @param dictDatas 字典数据列表
@@ -34,7 +42,7 @@ public class DictUtils
     }
 
     /**
-     * 获取字典缓存
+     * 获取字典缓存（Redis中取出并反序列化为 SysDictData 列表）
      * 
      * @param key 参数键
      * @return dictDatas 字典数据列表
@@ -82,7 +90,10 @@ public class DictUtils
     }
 
     /**
-     * 根据字典类型和字典值获取字典标签
+     * 根据字典类型和字典值获取字典标签（核心翻译方法）
+     * <p>
+     * 使用示例：getDictLabel("sys_user_sex", "0") → "男"；
+     * 支持多值：getDictLabel("sys_user_sex", "0,1", ",") → "男,女"
      * 
      * @param dictType 字典类型
      * @param dictValue 字典值
@@ -205,7 +216,7 @@ public class DictUtils
     }
 
     /**
-     * 设置cache key
+     * 设置cache key：统一拼接 sys_dict: 前缀（CacheConstants.SYS_DICT_KEY）
      * 
      * @param configKey 参数键
      * @return 缓存键key

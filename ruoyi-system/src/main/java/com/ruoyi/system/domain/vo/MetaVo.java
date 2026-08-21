@@ -4,6 +4,11 @@ import com.ruoyi.common.utils.StringUtils;
 
 /**
  * 路由显示信息
+ * <p>
+ * 【架构位置】ruoyi-system → domain → vo，RouterVo 的 meta 子对象，描述路由在 UI 上的展示属性。
+ * 【前端联动】对应 vue-router 的 meta 字段：
+ * title→侧边栏/面包屑/页签标题；icon→菜单图标（svg 名）；noCache→true 时页面不被 <keep-alive> 缓存（每次进页面都重新加载）；
+ * link→外链/内链地址（http 开头时点击菜单用 iframe 或新窗口打开）。
  * 
  * @author ruoyi
  */

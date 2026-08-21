@@ -6,6 +6,11 @@ import com.ruoyi.common.core.domain.entity.SysDept;
 
 /**
  * 部门管理 服务层
+ * <p>
+ * 【架构位置】ruoyi-system → service，部门业务接口，实现类 SysDeptServiceImpl。
+ * 【业务职责】部门树 CRUD：树结构组装（buildDeptTree/TreeSelect 供前端 el-tree 下拉树）、
+ * 修改部门时级联更新所有子孙的 ancestors、删除前校验子节点与用户数。
+ * 【调用方】SysDeptController（「系统管理-部门管理」）、SysRoleController（数据权限部门树）。
  * 
  * @author ruoyi
  */

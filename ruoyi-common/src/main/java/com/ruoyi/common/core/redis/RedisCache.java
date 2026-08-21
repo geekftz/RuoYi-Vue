@@ -32,6 +32,8 @@ import org.springframework.stereotype.Component;
  * @author ruoyi
  **/
 @SuppressWarnings(value = { "unchecked", "rawtypes" })
+// 【注解专项】@Component：把本类注册为Spring容器中的Bean，业务类通过 @Autowired RedisCache redisCache 注入使用。
+// 若依项目中最常见的注入示例：SysConfigServiceImpl、TokenService、CaptchaController 中都注入了它。
 @Component
 public class RedisCache
 {
@@ -52,6 +54,9 @@ public class RedisCache
 
     /**
      * 缓存基本的对象，Integer、String、实体类等
+     * <p>
+     * 【典型示例】TokenService存登录用户：redisCache.setCacheObject("login_tokens:" + token, loginUser, 720, TimeUnit.MINUTES)
+     * 验证码答案缓存：redisCache.setCacheObject("captcha_codes:" + uuid, answer, 2, TimeUnit.MINUTES)
      *
      * @param key 缓存的键值
      * @param value 缓存的值
@@ -112,9 +117,12 @@ public class RedisCache
 
     /**
      * 获得缓存的基本对象。
+     * <p>
+     * 【反序列化】存进去的Java对象经FastJson2序列化存Redis，取出时自动反序列化还原为原类型，
+     * 调用方直接强转即可：LoginUser loginUser = redisCache.getCacheObject(key);
      *
      * @param key 缓存键值
-     * @return 缓存键值对应的数据
+     * @return 缓存键值对应的数据（不存在返回null，务必判空）
      */
     public <T> T getCacheObject(final String key)
     {
@@ -270,9 +278,12 @@ public class RedisCache
     }
 
     /**
-     * 获得缓存的基本对象列表
+     * 获得缓存的基本对象列表（按key模式匹配）
+     * <p>
+     * 【使用场景】批量清理某类缓存：如字典数据变更后 redisCache.deleteObject(redisCache.keys("sys_dict:*"))
+     * 【性能警告】KEYS命令会遍历全库，生产环境大key数量下慎用；若依后台管理场景数据量小可接受。
      *
-     * @param pattern 字符串前缀
+     * @param pattern 字符串前缀（支持*通配，如 "login_tokens:*"）
      * @return 对象列表
      */
     public Collection<String> keys(final String pattern)

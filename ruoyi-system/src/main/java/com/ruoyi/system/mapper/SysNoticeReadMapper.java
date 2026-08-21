@@ -8,6 +8,11 @@ import com.ruoyi.system.domain.SysNoticeRead;
 
 /**
  * 公告已读记录 数据层
+ * <p>
+ * 【架构位置】ruoyi-system → mapper，MyBatis 数据访问接口，对应数据库表 sys_notice_read（公告已读记录，项目定制表）。
+ * 【负责的数据操作】已读记录写入（防重复）、未读数统计（前端消息角标）、带已读状态的公告列表查询、
+ * 已读用户名单查询（公告详情页「已读人员」）、删除公告时级联清理。
+ * 【调用方】SysNoticeReadServiceImpl / SysNoticeServiceImpl。
  *
  * @author ruoyi
  */

@@ -6,6 +6,10 @@ import com.ruoyi.common.utils.StringUtils;
 
 /**
  * 字符集工具类
+ * <p>
+ * 【架构位置】common模块 → core/text，字符编码处理工具（源自Hutool的精简版）。
+ * 【使用场景】文件下载文件名中文乱码处理、HTTP响应编码、第三方接口对接时的编码转换。
+ * 【常见坑】HTTP响应头/文件名只能用ISO-8859-1编码，中文需先转字节再按目标编码重组，本类convert方法就是干这个的。
  * 
  * @author ruoyi
  */
@@ -50,7 +54,10 @@ public class CharsetKit
     }
 
     /**
-     * 转换字符串的字符集编码
+     * 转换字符串的字符集编码（核心实现）
+     * <p>
+     * 【原理】String.getBytes(源编码)把字符串还原为字节数组，再new String(字节, 目标编码)按新编码解释。
+     * 例：convert("中文", ISO_8859_1, UTF_8) 用于修复被错误按ISO-8859-1解码的中文。
      * 
      * @param source 字符串
      * @param srcCharset 源字符集，默认ISO-8859-1

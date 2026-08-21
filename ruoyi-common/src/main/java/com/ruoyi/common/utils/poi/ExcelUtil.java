@@ -88,6 +88,17 @@ import com.ruoyi.common.utils.reflect.ReflectUtils;
 
 /**
  * Excel相关处理
+ * <p>
+ * 【架构位置】ruoyi-common → utils → poi，若依「Excel 导入导出」的核心引擎，基于 Apache POI 封装。
+ * 【工作原理】以实体类字段上的 @Excel 注解为驱动：反射扫描字段注解 → 决定列头/顺序/字典翻译/日期格式 → 读写 Sheet。
+ * 【前端经理必懂的三个使用姿势】
+ * 1. 导出（最常用）：Controller 中 new ExcelUtil<Xxx>(Xxx.class).exportExcel(list, "sheet名") → 返回 AjaxResult，
+ *    data 是文件名，前端再用 /common/download?fileName=xx 下载（先写文件后下载的两段式设计）；
+ * 2. 导出（直接响应流）：exportExcel(response, list, sheetName)，浏览器直接触发下载；
+ * 3. 导入：new ExcelUtil<Xxx>(Xxx.class).importExcel(file.getInputStream()) → 直接得到 List<Xxx> 实体集合。
+ * 【配套注解】@Excel(name=列头, dictType=字典类型, readConverterExp="0=男,1=女", dateFormat, targetAttr, type=IMPORT/EXPORT)
+ * 【性能设计】导出用 SXSSFWorkbook 流式工作簿（内存只保留500行窗口，其余刷磁盘），单 Sheet 超 65536 行自动拆分。
+ * 【安全设计】导出时对 = - + @ 开头的单元格内容做公式注入（CSV Injection）防护。
  * 
  * @author ruoyi
  */
@@ -95,14 +106,18 @@ public class ExcelUtil<T>
 {
     private static final Logger log = LoggerFactory.getLogger(ExcelUtil.class);
 
+    /** 多值分隔符：一个单元格存多个值时用逗号分隔，如角色"1,2" */
     public static final String SEPARATOR = ",";
 
+    /** Excel公式注入特征正则：单元格以 = - + @ 开头会被Excel当公式执行，导出时需转义防护 */
     public static final String FORMULA_REGEX_STR = "=|-|\\+|@";
 
+    /** 公式注入特征字符数组，与上面的正则配套使用 */
     public static final String[] FORMULA_STR = { "=", "-", "+", "@" };
 
     /**
      * 用于dictType属性数据存储，避免重复查缓存
+     * 【优化点】同一列几千行都要翻译同一个字典，这里做了一次本地缓存，避免每行都访问 Redis
      */
     public Map<String, String> sysDictMap = new HashMap<String, String>();
 
@@ -113,6 +128,7 @@ public class ExcelUtil<T>
 
     /**
      * Excel sheet最大行数，默认65536
+     * 【为什么是这个值】xls(03版)单Sheet上限65536行；xlsx虽支持104万行，但若依统一按此拆分，兼容两种格式
      */
     public static final int sheetSize = 65536;
 
@@ -231,6 +247,10 @@ public class ExcelUtil<T>
         this.excludeFields = fields;
     }
 
+    /**
+     * 初始化出口：所有导出/模板方法最终都汇聚到这里，串起整个准备流程
+     * 流程：扫描@Excel字段(createExcelField) → 创建流式工作簿(createWorkbook) → 写大标题(createTitle) → 写子表头(createSubHead)
+     */
     public void init(List<T> list, String sheetName, String title, Type type)
     {
         if (list == null)
@@ -357,6 +377,7 @@ public class ExcelUtil<T>
     public List<T> importExcel(String sheetName, InputStream is, int titleNum) throws Exception
     {
         this.type = Type.IMPORT;
+        // WorkbookFactory.create 自动识别 xls(HSSF)/xlsx(XSSF) 两种格式，调用方无需关心版本
         this.wb = WorkbookFactory.create(is);
         List<T> list = new ArrayList<T>();
         // 如果指定sheet名,则取指定sheet中的内容 否则默认指向第1个sheet
@@ -365,6 +386,7 @@ public class ExcelUtil<T>
         {
             throw new IOException("文件sheet不存在");
         }
+        // 区分 xls/xlsx 提前抽出全部图片（导入带图片列的Excel时，靠「行号_列号」映射回单元格）
         boolean isXSSFWorkbook = !(wb instanceof HSSFWorkbook);
         Map<String, List<PictureData>> pictures = null;
         if (isXSSFWorkbook)
@@ -380,6 +402,8 @@ public class ExcelUtil<T>
         if (rows > 0)
         {
             // 定义一个map用于存放excel列的序号和field.
+            // 【导入核心思路】不硬编码列顺序，而是读表头行建立「列名→列下标」映射，再与@Excel(name=)匹配，
+            // 这样用户调整Excel列顺序也能正确导入
             Map<String, Integer> cellMap = new HashMap<String, Integer>();
             // 获取表头
             Row heard = sheet.getRow(titleNum);
@@ -551,6 +575,7 @@ public class ExcelUtil<T>
      */
     public AjaxResult exportExcel(List<T> list, String sheetName, String title)
     {
+        // 【Controller最常用入口】初始化(扫描注解+建工作簿+写标题) → 走「先落盘成文件、返回文件名」的导出路径
         this.init(list, sheetName, title, Type.EXPORT);
         return exportExcel();
     }
@@ -579,6 +604,7 @@ public class ExcelUtil<T>
      */
     public void exportExcel(HttpServletResponse response, List<T> list, String sheetName, String title)
     {
+        // 【直接下载入口】设置 xlsx 的 MIME 类型，浏览器识别为文件下载而非页面展示
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setCharacterEncoding("utf-8");
         this.init(list, sheetName, title, Type.EXPORT);
@@ -779,9 +805,11 @@ public class ExcelUtil<T>
         try
         {
             writeSheet();
+            // 生成 "UUID_sheet名.xlsx" 文件名，写到服务器下载目录（RuoYiConfig.getDownloadPath()）
             String filename = encodingFilename(sheetName);
             out = new FileOutputStream(getAbsoluteFile(filename));
             wb.write(out);
+            // 只把「文件名」返回前端，前端再调 /common/download?fileName=xx 真正下载文件（两段式下载）
             return AjaxResult.success(filename);
         }
         catch (Exception e)
@@ -801,7 +829,7 @@ public class ExcelUtil<T>
      */
     public void writeSheet()
     {
-        // 取出一共有多少个sheet.
+        // 取出一共有多少个sheet. 数据量超过 sheetSize(65536) 时自动拆分成多个 Sheet
         int sheetNo = Math.max(1, (int) Math.ceil(list.size() * 1.0 / sheetSize));
         for (int index = 0; index < sheetNo; index++)
         {
@@ -845,6 +873,7 @@ public class ExcelUtil<T>
     @SuppressWarnings("unchecked")
     public void fillExcelData(int index)
     {
+        // 当前 Sheet 负责的数据区间：[startNo, endNo)，配合 writeSheet 的分片逻辑
         int startNo = index * sheetSize;
         int endNo = Math.min(startNo + sheetSize, list.size());
         int currentRowNum = rownum + 1; // 从标题行后开始
@@ -1439,6 +1468,7 @@ public class ExcelUtil<T>
 
     /**
      * 解析导出值 0=男,1=女,2=未知
+     * 【readConverterExp 的执行者】把数据库值翻译成显示文本：如 sex="0" → "男"；支持多值（"0,1"→"男,女"）
      * 
      * @param propertyValue 参数值
      * @param converterExp 翻译注解
@@ -1548,6 +1578,8 @@ public class ExcelUtil<T>
     {
         try
         {
+            // 【自定义格式化扩展点】反射实例化 @Excel(handler=) 指定的 ExcelHandlerAdapter 实现类，
+            // 调用其 format() 加工单元格值——字典/固定表达式都不够用时用这个
             Object instance = excel.handler().newInstance();
             Method formatMethod = excel.handler().getMethod("format", new Class[] { Object.class, String[].class, Cell.class, Workbook.class });
             value = formatMethod.invoke(instance, value, excel.args(), cell, this.wb);
@@ -1610,6 +1642,7 @@ public class ExcelUtil<T>
      */
     public String encodingFilename(String filename)
     {
+        // UUID 前缀防止同名文件互相覆盖；真实下载时 /common/download 会剥掉 UUID_ 前缀再回传给浏览器
         return UUID.randomUUID() + "_" + filename + ".xlsx";
     }
 
@@ -1620,6 +1653,7 @@ public class ExcelUtil<T>
      */
     public String getAbsoluteFile(String filename)
     {
+        // 落到 ruoyi.profile 配置的下载目录（默认 uploadPath/download），父目录不存在则自动创建
         String downloadPath = RuoYiConfig.getDownloadPath() + filename;
         File desc = new File(downloadPath);
         if (!desc.getParentFile().exists())
@@ -1683,6 +1717,7 @@ public class ExcelUtil<T>
 
     /**
      * 得到所有定义字段
+     * 【列顺序决定处】按 @Excel(sort=) 值升序排列，最终导出列顺序 = 注解 sort 值而非字段声明顺序
      */
     private void createExcelField()
     {
@@ -1700,8 +1735,10 @@ public class ExcelUtil<T>
         List<Field> tempFields = new ArrayList<>();
         subFieldsMap = new HashMap<>();
         subMethods = new HashMap<>();
+        // 同时扫描父类和本类字段——因为业务实体的审计字段在 BaseEntity 父类，@Excel 也可能标在父类
         tempFields.addAll(Arrays.asList(clazz.getSuperclass().getDeclaredFields()));
         tempFields.addAll(Arrays.asList(clazz.getDeclaredFields()));
+        // includeFields（showColumn）优先于 excludeFields（hideColumn）；两者都空则全量导出
         if (StringUtils.isNotEmpty(includeFields))
         {
             for (Field field : tempFields)
@@ -1801,6 +1838,8 @@ public class ExcelUtil<T>
      */
     public void createWorkbook()
     {
+        // SXSSFWorkbook 是 POI 的流式工作簿：内存中只保留 500 行滑动窗口，超出的行刷到临时磁盘文件，
+        // 这是若依导出大数据量不 OOM 的关键（代价是写完后不能随机读）
         this.wb = new SXSSFWorkbook(500);
         this.sheet = wb.createSheet();
         wb.setSheetName(0, sheetName);
@@ -1815,7 +1854,7 @@ public class ExcelUtil<T>
      */
     public void createSheet(int sheetNo, int index)
     {
-        // 设置工作表的名称.
+        // 设置工作表的名称. 数据超 65536 行拆分时，第2个及以后的 Sheet 命名为 "原名+序号"，并补建大标题行
         if (sheetNo > 1 && index > 0)
         {
             this.sheet = wb.createSheet();

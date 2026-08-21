@@ -40,6 +40,11 @@ public class BaseController
 
     /**
      * 将前台传递过来的日期格式的字符串，自动转化为Date类型
+     * <p>
+     * 【注解专项】@InitBinder：Spring MVC的数据绑定钩子，在本Controller处理请求前先执行。
+     * 这里注册了一个Date类型的自定义编辑器，前端传"2026-08-21"或"2026-08-21 12:00:00"等字符串参数时，
+     * 自动调用DateUtils.parseDate()（兼容多种格式）转成Date对象绑定到实体字段上，
+     * 避免每个接口手动处理日期字符串。
      */
     @InitBinder
     public void initBinder(WebDataBinder binder)
@@ -62,6 +67,9 @@ public class BaseController
      * 调用 PageHelper.startPage() 设置 ThreadLocal 分页参数。
      * MyBatis 执行下一条查询时会自动拼接 LIMIT 语句实现物理分页。
      * </p>
+     * 【若依分页三段式】startPage() → 查询List → getDataTable(list)，缺一不可。
+     * 【前端联动】前端列表页传参约定：?pageNum=1&pageSize=10&orderByColumn=createTime&isAsc=descending
+     * 【原理】PageHelper将分页参数存在ThreadLocal，仅对紧随其后的第一条MyBatis查询生效，用完即清。
      */
     protected void startPage()
     {
@@ -170,6 +178,8 @@ public class BaseController
      * <p>
      * 增删改操作的统一返回方法，影响行数 > 0 返回成功，否则返回失败。
      * </p>
+     * 【若依高频用法】新增/修改/删除接口最后一行标配：return toAjax(userService.insertUser(user));
+     * MyBatis的insert/update/delete返回受影响行数，>0即成功，前端收到code=200弹出"操作成功"。
      *
      * @param rows 影响的数据库行数
      * @return 操作结果
@@ -200,6 +210,10 @@ public class BaseController
 
     /**
      * 获取用户缓存信息
+     * <p>
+     * 【调用链路】SecurityUtils.getLoginUser() → SecurityContextHolder.getContext().getAuthentication()
+     * → 强转principal为LoginUser。数据源头是JWT过滤器从Redis取出的登录信息。
+     * 【使用场景】Controller里需要当前登录人时直接用，如：record.setCreateBy(getUsername())。
      */
     public LoginUser getLoginUser()
     {

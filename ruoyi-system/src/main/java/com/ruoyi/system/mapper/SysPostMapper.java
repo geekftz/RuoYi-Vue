@@ -5,6 +5,10 @@ import com.ruoyi.system.domain.SysPost;
 
 /**
  * 岗位信息 数据层
+ * <p>
+ * 【架构位置】ruoyi-system → mapper，MyBatis 数据访问接口，对应数据库表 sys_post（岗位）。
+ * 【负责的数据操作】岗位 CRUD、名称/编码唯一性校验、按用户ID查已选岗位ID列表（用户表单回显）、按用户名查岗位组。
+ * 【调用方】SysPostServiceImpl / SysUserServiceImpl ← SysPostController（「系统管理-岗位管理」菜单）。
  * 
  * @author ruoyi
  */

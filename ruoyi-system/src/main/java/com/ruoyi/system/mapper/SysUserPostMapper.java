@@ -5,6 +5,11 @@ import com.ruoyi.system.domain.SysUserPost;
 
 /**
  * 用户与岗位关联表 数据层
+ * <p>
+ * 【架构位置】ruoyi-system → mapper，MyBatis 数据访问接口，对应数据库表 sys_user_post（用户-岗位关联）。
+ * 【负责的数据操作】关联记录的增删与统计：新增/编辑用户时先按 userId 删旧再 batchUserPost 插新、
+ * 删除岗位前检查占用（countUserPostById）。
+ * 【调用方】SysUserServiceImpl / SysPostServiceImpl。
  * 
  * @author ruoyi
  */

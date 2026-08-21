@@ -5,6 +5,14 @@ import java.util.List;
 
 /**
  * 路由配置信息
+ * <p>
+ * 【架构位置】ruoyi-system → domain → vo，「动态路由」的返回对象（VO）。
+ * 【前端联动——非常重要】前端登录后调 /getRouters 拿到本对象树，在 permission.js 中 addRoutes 动态注册到 Vue Router，
+ * 侧边栏菜单也是用它渲染。字段与 vue-router 的路由配置一一对应：
+ * name→路由名、path→路径、component→组件路径（对应 src/views 下的 .vue）、hidden→是否隐藏、
+ * redirect/alwaysShow/children 控制嵌套菜单行为、meta→标题/图标等显示信息（见 MetaVo）。
+ * 【组装链路】SysMenuServiceImpl.selectMenuTreeByUserId → buildMenus 把 SysMenu 转成本对象树。
+ * 【注解专项】@JsonInclude(NON_EMPTY)：空字段不输出到 JSON，减小响应体积、避免前端拿到一堆 null。
  * 
  * @author ruoyi
  */
@@ -32,7 +40,8 @@ public class RouterVo
     private String redirect;
 
     /**
-     * 组件地址
+     * 组件地址：如 system/user/index，前端会映射成 src/views/system/user/index.vue；
+     * 特殊值 Layout/InnerLink/ParentView 对应布局组件而非业务页面
      */
     private String component;
 

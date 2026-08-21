@@ -5,6 +5,11 @@ import com.ruoyi.system.domain.SysUserOnline;
 
 /**
  * 在线用户 服务层
+ * <p>
+ * 【架构位置】ruoyi-system → service，在线用户业务接口，实现类 SysUserOnlineServiceImpl。
+ * 【业务职责】从 Redis（login_tokens:*）扫描在线会话列表、按IP/账号过滤、强退（删 Redis key）。
+ * 全程不查数据库——在线状态的唯一事实源是 Redis。
+ * 【调用方】SysUserOnlineController（「系统监控-在线用户」菜单）。
  * 
  * @author ruoyi
  */

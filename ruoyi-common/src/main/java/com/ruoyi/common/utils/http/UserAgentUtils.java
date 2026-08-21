@@ -8,11 +8,18 @@ import nl.basjes.parse.useragent.UserAgentAnalyzer;
 
 /**
  * UserAgent解析工具类
+ * <p>
+ * 【能力】解析HTTP请求头中的User-Agent字符串，识别出浏览器类型和操作系统。
+ * 【使用场景】登录日志（sys_logininfor）和操作日志（sys_oper_log）中记录用户的浏览器和操作系统信息，
+ * 前端在"日志管理"页面可以看到每条操作记录对应的客户端环境。
+ * 【双保险策略】优先用UserAgentAnalyzer（第三方库yauaa）解析，解析失败（返回"??"）时
+ * 降级为内置正则表达式匹配（formatBrowser/formatOperatingSystem方法），覆盖更多非主流浏览器。
  * 
  * @author ruoyi
  */
 public class UserAgentUtils
 {
+    /** 未识别时的默认返回值 */
     public static final String UNKNOWN = "";
 
     // 浏览器正则表达式模式
@@ -45,12 +52,17 @@ public class UserAgentUtils
             .build();
 
     /**
-     * 获取客户端浏览器
+     * 获取客户端浏览器（含版本号），如"Chrome 120"
+     * 
+     * @param userAgent 请求头User-Agent字符串
+     * @return 浏览器名称+主版本号，未识别返回空字符串
      */
     public static String getBrowser(String userAgent)
     {
+        // 优先用第三方库解析
         UserAgent.ImmutableUserAgent iua = userAgentAnalyzer.parse(userAgent);
         String agentNameVersion = iua.get(UserAgent.AGENT_NAME_VERSION).getValue();
+        // 第三方库未识别时降级为正则匹配
         if (StringUtils.isBlank(agentNameVersion) || agentNameVersion.contains("??"))
         {
             return formatBrowser(userAgent);
@@ -59,7 +71,10 @@ public class UserAgentUtils
     }
 
     /**
-     * 获取客户端操作系统
+     * 获取客户端操作系统（含版本号），如"Windows 10"
+     * 
+     * @param userAgent 请求头User-Agent字符串
+     * @return 操作系统名称+版本，未识别返回空字符串
      */
     public static String getOperatingSystem(String userAgent)
     {

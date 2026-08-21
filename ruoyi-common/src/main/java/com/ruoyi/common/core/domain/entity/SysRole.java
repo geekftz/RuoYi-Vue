@@ -12,6 +12,11 @@ import com.ruoyi.common.core.domain.BaseEntity;
 
 /**
  * 角色表 sys_role
+ * <p>
+ * 【架构位置】common模块 → core/domain/entity，角色实体（Entity），对应sys_role表。
+ * 【业务角色】角色是若依权限体系的中枢：用户通过sys_user_role关联角色，角色通过sys_role_menu关联菜单（权限），
+ *             形成"用户→角色→菜单/按钮权限"的RBAC模型。角色还承载数据范围（dataScope）配置。
+ * 【两个维度】①功能权限：菜单树上的菜单/按钮（perms字符串）；②数据权限：能看到哪些部门的数据（dataScope）。
  * 
  * @author ruoyi
  */
@@ -36,10 +41,15 @@ public class SysRole extends BaseEntity
     private Integer roleSort;
 
     /** 数据范围（1：所有数据权限；2：自定义数据权限；3：本部门数据权限；4：本部门及以下数据权限；5：仅本人数据权限） */
+    // 【重点掌握】这是若依数据权限的总开关字段。用户列表等接口上加@DataScope注解后，DataScopeAspect切面
+    // 会读取当前用户所有角色的dataScope取最宽范围，拼出AND条件的SQL片段塞进params.dataScope，
+    // 由XML中的${params.dataScope}拼入查询。如"本部门及以下"→ AND d.dept_id IN (子部门集合)。
     @Excel(name = "数据范围", readConverterExp = "1=所有数据权限,2=自定义数据权限,3=本部门数据权限,4=本部门及以下数据权限,5=仅本人数据权限")
     private String dataScope;
 
     /** 菜单树选择项是否关联显示（ 0：父子不互相关联显示 1：父子互相关联显示） */
+    // 【前端联动】角色编辑页的菜单树el-tree组件check-strictly属性：默认勾选父菜单自动勾选所有子菜单（父子关联），
+    // 关闭关联后父菜单可单独勾选不回显子节点——用于精细控制只给目录权限不给按钮权限的场景。
     private boolean menuCheckStrictly;
 
     /** 部门树选择项是否关联显示（0：父子不互相关联显示 1：父子互相关联显示 ） */
@@ -55,13 +65,13 @@ public class SysRole extends BaseEntity
     /** 用户是否存在此角色标识 默认不存在 */
     private boolean flag = false;
 
-    /** 菜单组 */
+    /** 菜单组（前端角色编辑页菜单树勾选的菜单ID数组，非表字段；保存时写入sys_role_menu关联表） */
     private Long[] menuIds;
 
-    /** 部门组（数据权限） */
+    /** 部门组（数据权限）（dataScope=2自定义时勾选的部门ID数组，非表字段；保存时写入sys_role_dept关联表） */
     private Long[] deptIds;
 
-    /** 角色菜单权限 */
+    /** 角色菜单权限（该角色拥有的perms字符串集合，登录时聚合进LoginUser.permissions；非表字段） */
     private Set<String> permissions;
 
     public SysRole()
@@ -89,6 +99,7 @@ public class SysRole extends BaseEntity
         return isAdmin(this.roleId);
     }
 
+    /** 是否为管理员角色（roleId == 1L，硬编码约定；超管角色在权限/数据范围校验中直接放行） */
     public static boolean isAdmin(Long roleId)
     {
         return roleId != null && 1L == roleId;

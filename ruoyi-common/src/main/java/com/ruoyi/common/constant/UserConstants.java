@@ -2,6 +2,10 @@ package com.ruoyi.common.constant;
 
 /**
  * 用户常量信息
+ * <p>
+ * 【架构位置】common模块 → constant，系统管理域（用户/角色/部门/菜单/字典）的状态码与类型码常量。
+ * 【重点掌握】若依全系统状态字段统一约定：字符串"0"=正常/是，"1"或"2"=停用/删除，别写成int。
+ * 菜单三类型 M目录/C菜单/F按钮 与sys_menu.menu_type列对应，是动态路由生成的分派依据。
  * 
  * @author ruoyi
  */
@@ -54,13 +58,13 @@ public class UserConstants
     /** 菜单类型（按钮） */
     public static final String TYPE_BUTTON = "F";
 
-    /** Layout组件标识 */
+    /** Layout组件标识（动态路由特殊组件名：一级目录的component填"Layout"，前端getRouters返回后映射为布局组件） */
     public final static String LAYOUT = "Layout";
     
-    /** ParentView组件标识 */
+    /** ParentView组件标识（多级菜单嵌套时中间层级用，仅做路由分组不渲染页面） */
     public final static String PARENT_VIEW = "ParentView";
 
-    /** InnerLink组件标识 */
+    /** InnerLink组件标识（内链菜单用：菜单地址是站内http链接时，前端用iframe内嵌打开） */
     public final static String INNER_LINK = "InnerLink";
 
     /** 校验是否唯一的返回标识 */

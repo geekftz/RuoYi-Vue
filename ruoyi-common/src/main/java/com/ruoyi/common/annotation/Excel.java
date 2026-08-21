@@ -11,6 +11,14 @@ import com.ruoyi.common.utils.poi.ExcelHandlerAdapter;
 
 /**
  * 自定义导出Excel数据注解
+ * <p>
+ * 【作用】标在实体字段上，声明该字段参与Excel导入/导出及导出时的列名、格式、字典转换等，
+ *         由ExcelUtil反射解析本注解生成/解析Excel（底层基于Apache POI）。
+ * 【典型用法】@Excel(name = "用户性别", readConverterExp = "0=男,1=女") —— 导出时0自动显示为"男"。
+ * 【调用链路】Controller调ExcelUtil.exportExcel(list) → 反射读取实体上所有@Excel字段 →
+ *             按sort排序生成列头 → 逐行写字段值（含字典/表达式/日期转换）→ 输出xlsx文件流给前端下载。
+ * 【属性速查】name列名 / type导出还是导入 / dictType字典自动翻译 / readConverterExp手动值映射 /
+ *             targetAttr取关联对象属性 / dateFormat日期格式 / cellType数字文本图片 / combo下拉框。
  * 
  * @author ruoyi
  */
@@ -35,6 +43,9 @@ public @interface Excel
 
     /**
      * 如果是字典类型，请设置字典的type值 (如: sys_user_sex)
+     * <p>
+     * 【与readConverterExp区别】dictType从sys_dict_data表动态取翻译（字典改了导出自动跟着变）；
+     * readConverterExp是写死的映射。推荐用dictType，字典统一走后台管理。
      */
     public String dictType() default "";
 
@@ -110,6 +121,9 @@ public @interface Excel
 
     /**
      * 另一个类中的属性名称,支持多级获取,以小数点隔开
+     * <p>
+     * 【使用场景】字段是关联对象时拆列导出：SysUser的dept字段配@Excel(name="部门名称", targetAttr="deptName")，
+     * 导出时取dept.getDeptName()的值。多层级如targetAttr="dept.parent.deptName"。
      */
     public String targetAttr() default "";
 
@@ -160,6 +174,9 @@ public @interface Excel
 
     /**
      * 字段类型（0：导出导入；1：仅导出；2：仅导入）
+     * <p>
+     * 【典型场景】主键ID列通常type=EXPORT（导出给用户看，但导入时不用传，由数据库自增）；
+     * 部门编号列通常type=IMPORT（导入时定位部门，导出无意义）。
      */
     Type type() default Type.ALL;
 

@@ -12,6 +12,12 @@ import java.util.regex.Pattern;
 
 /**
  * HTML过滤器，用于去除XSS漏洞隐患。
+ * <p>
+ * 【架构位置】common/utils/html，XSS防护的最底层实现，被EscapeUtil.clean()调用。
+ * 【工作原理】白名单过滤策略：只允许vAllowed中定义的标签和属性通过，其余HTML标签全部移除。
+ * 默认允许的标签：a、img、b、strong、i、em（安全的格式化标签），script、iframe等危险标签被清除。
+ * 【使用方式】不直接调用本类，通过EscapeUtil.clean(content)间接调用。
+ * 【处理流程】filter()方法依次执行：转义注释 → 平衡HTML标签 → 检查过滤标签 → 移除空标签。
  *
  * @author ruoyi
  */
@@ -98,7 +104,8 @@ public final class HTMLFilter
     private final boolean alwaysMakeTags;
 
     /**
-     * Default constructor.
+     * Default constructor. 配置默认的HTML白名单规则：
+     * 允许a(链接)/img(图片)/b/strong/i/em(格式化标签)，拒绝其他所有标签
      */
     public HTMLFilter()
     {
@@ -191,6 +198,7 @@ public final class HTMLFilter
 
     /**
      * given a user submitted input String, filter out any invalid or restricted html.
+     * 【核心过滤入口】XSS清洗的完整流程：转义注释→平衡标签→检查过滤→移除空标签
      *
      * @param input text (i.e. submitted by a user) than may contain html
      * @return "clean" version of input, with only valid, whitelisted html elements allowed
@@ -269,6 +277,9 @@ public final class HTMLFilter
         return s;
     }
 
+    /**
+     * 检查并过滤HTML标签：遍历所有<...>标签，白名单内的保留，白名单外的移除
+     */
     private String checkTags(String s)
     {
         Matcher m = P_TAGS.matcher(s);
@@ -323,6 +334,10 @@ public final class HTMLFilter
         return m.replaceAll(replacement);
     }
 
+    /**
+     * 处理单个HTML标签：判断是否允许、校验属性、检查URL协议安全性
+     * 白名单外的标签返回空字符串（移除），白名单内的标签重建（只保留允许的属性）
+     */
     private String processTag(final String s)
     {
         // ending tags

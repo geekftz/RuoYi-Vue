@@ -6,8 +6,21 @@ import com.ruoyi.common.constant.HttpStatus;
 import com.ruoyi.common.utils.StringUtils;
 
 /**
- * 操作消息提醒
- * 
+ * 操作消息提醒（若依统一返回体之一 · 重点掌握）
+ * <p>
+ * 【架构位置】ruoyi-common / core / domain层 —— Controller非表格接口的统一返回结构。
+ * 【返回给前端的JSON格式】
+ *   成功：{"code":200,"msg":"操作成功","data":{...}}
+ *   失败：{"code":500,"msg":"错误原因"}
+ *   警告：{"code":601,"msg":"警告提示"}
+ * 【前端约定】ruoyi-ui 的 axios 响应拦截器按 code 分流：200=成功提示，500=错误弹窗，601=警告提示，401=跳登录。
+ * <p>
+ * 【设计巧思】直接继承 HashMap：① 序列化即JSON对象；② put() 可链式追加任意扩展字段
+ *   如 AjaxResult.success().put("token", token) → {"code":200,"msg":"操作成功","token":"xxx"}
+ * <p>
+ * 【与 TableDataInfo 的分工】表格列表接口返回 TableDataInfo（含 total/rows），其余一律用 AjaxResult；
+ * 新版本另有泛型版 R&lt;T&gt;，语义相同。
+ *
  * @author ruoyi
  */
 public class AjaxResult extends HashMap<String, Object>
@@ -91,10 +104,10 @@ public class AjaxResult extends HashMap<String, Object>
     }
 
     /**
-     * 返回成功消息
+     * 返回成功消息（code=200）
      * 
      * @param msg 返回内容
-     * @param data 数据对象
+     * @param data 数据对象（会放到JSON的 data 键下；传null则不带data字段）
      * @return 成功消息
      */
     public static AjaxResult success(String msg, Object data)
@@ -159,7 +172,7 @@ public class AjaxResult extends HashMap<String, Object>
     }
 
     /**
-     * 返回错误消息
+     * 返回错误消息（自定义状态码，如 401 未认证、403 无权限，前端拦截器按code分流处理）
      * 
      * @param code 状态码
      * @param msg 返回内容
@@ -202,6 +215,8 @@ public class AjaxResult extends HashMap<String, Object>
 
     /**
      * 方便链式调用
+     * <p>
+     * 重写Map.put返回this：AjaxResult.success().put("key1", v1).put("key2", v2)
      *
      * @param key 键
      * @param value 值

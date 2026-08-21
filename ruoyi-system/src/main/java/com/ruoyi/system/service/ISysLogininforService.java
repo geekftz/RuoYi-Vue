@@ -5,6 +5,10 @@ import com.ruoyi.system.domain.SysLogininfor;
 
 /**
  * 系统访问日志情况信息 服务层
+ * <p>
+ * 【架构位置】ruoyi-system → service，登录日志业务接口，实现类 SysLogininforServiceImpl。
+ * 【业务职责】登录日志的写入（SysLoginService 登录成败时异步调用）、分页查询、删除、清空、按IP/账号解锁。
+ * 【调用方】SysLogininforController（「系统监控-登录日志」）/ SysLoginService / SysPasswordService。
  * 
  * @author ruoyi
  */

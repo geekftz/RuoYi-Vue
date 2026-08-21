@@ -6,6 +6,13 @@ import com.ruoyi.common.core.domain.entity.SysDept;
 
 /**
  * 部门管理 数据层
+ * <p>
+ * 【架构位置】ruoyi-system → mapper，MyBatis 数据访问接口，对应数据库表 sys_dept（部门，树形结构）。
+ * 【负责的数据操作】部门树查询（列表/按角色查已选）、父子关系维护（ancestors 祖级列表的级联更新 updateDeptChildren）、
+ * 删除前校验（有无子节点/有无用户/名称同级唯一）。
+ * 【树形设计】表中 ancestors 列存「所有上级ID逗号串」（如 0,1,2），查子树用 find_in_set 一次搞定，避免递归查库。
+ * 【重点】selectDeptList 支持数据权限：XML 中拼接 ${params.dataScope}，DataScopeAspect 按当前用户角色注入部门过滤。
+ * 【调用方】SysDeptServiceImpl ← SysDeptController（「系统管理-部门管理」菜单）。
  * 
  * @author ruoyi
  */

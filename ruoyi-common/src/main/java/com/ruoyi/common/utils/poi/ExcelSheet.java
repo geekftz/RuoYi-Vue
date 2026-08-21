@@ -18,16 +18,16 @@ import java.util.List;
  */
 public class ExcelSheet<T>
 {
-    /** Sheet 名称 */
+    /** Sheet 名称（Excel 底部标签页名） */
     private String sheetName;
 
-    /** 导出数据集合 */
+    /** 导出数据集合：该 Sheet 要渲染的行数据 */
     private List<T> list;
 
-    /** 数据对应的实体 Class */
+    /** 数据对应的实体 Class：ExcelUtil 靠反射读取该类字段上的 @Excel 注解决定列头与取值 */
     private Class<T> clazz;
 
-    /** Sheet 顶部大标题（可为空） */
+    /** Sheet 顶部大标题（可为空）：对应 @Excel 之外的手工合并标题行 */
     private String title;
 
     public ExcelSheet(String sheetName, List<T> list, Class<T> clazz)

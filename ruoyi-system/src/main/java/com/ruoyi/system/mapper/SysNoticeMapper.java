@@ -5,6 +5,10 @@ import com.ruoyi.system.domain.SysNotice;
 
 /**
  * 通知公告表 数据层
+ * <p>
+ * 【架构位置】ruoyi-system → mapper，MyBatis 数据访问接口，对应数据库表 sys_notice（通知公告）。
+ * 【负责的数据操作】公告的标准 CRUD：详情、条件分页列表（标题/类型/创建人模糊查询）、新增、修改、单删/批删。
+ * 【调用方】SysNoticeServiceImpl ← SysNoticeController（「系统管理-通知公告」菜单）。
  * 
  * @author ruoyi
  */

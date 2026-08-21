@@ -24,7 +24,12 @@ import springfox.documentation.spring.web.plugins.Docket;
 
 /**
  * Swagger2的接口配置
- * 
+ * <p>
+ * 【架构位置】ruoyi-admin / config层 —— 在线API文档配置（Springfox Swagger3 / OAS_30）。
+ * 【作用】自动生成接口文档页面，开发联调时前端可直接在 /swagger-ui/index.html 查看并调试后端接口。
+ * 【开关】application.yml 中 swagger.enabled 控制是否开启（生产环境务必设为false，防止接口信息泄露）。
+ * 【Token调试】配置了全局 Authorization 请求头，在Swagger页面右上角填入登录Token后即可调试需认证的接口。
+ *
  * @author ruoyi
  */
 @Configuration
@@ -43,7 +48,9 @@ public class SwaggerConfig
     private String pathMapping;
 
     /**
-     * 创建API
+     * 创建API文档核心对象 Docket（Swagger的构建器）
+     * <p>
+     * 扫描规则：只收集方法上标注了 @ApiOperation 的接口进文档，避免把内部接口全部暴露
      */
     @Bean
     public Docket createRestApi()
@@ -70,6 +77,7 @@ public class SwaggerConfig
 
     /**
      * 安全模式，这里指定token通过Authorization头请求头传递
+     * 即Swagger页面调试接口时自动带上 Authorization: Bearer xxx 请求头
      */
     private List<SecurityScheme> securitySchemes()
     {
@@ -79,7 +87,7 @@ public class SwaggerConfig
     }
 
     /**
-     * 安全上下文
+     * 安全上下文：设定哪些路径的接口需要携带Token（这里 /.* 表示全部接口）
      */
     private List<SecurityContext> securityContexts()
     {
@@ -106,7 +114,7 @@ public class SwaggerConfig
     }
 
     /**
-     * 添加摘要信息
+     * 添加摘要信息：文档页顶部展示的标题/描述/作者/版本号（取自application.yml的ruoyi配置）
      */
     private ApiInfo apiInfo()
     {

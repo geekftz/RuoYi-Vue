@@ -5,16 +5,27 @@ import java.math.RoundingMode;
 
 /**
  * 精确的浮点数运算
+ * <p>
+ * 【能力】基于BigDecimal实现加减乘除和四舍五入，解决double/float直接运算的精度丢失问题。
+ * 【为什么要用它】Java中 0.1 + 0.2 ≠ 0.3（结果是0.30000000000000004），涉及金额、比率计算时必须用本工具类。
+ * 【使用场景】金额计算、百分比计算、统计报表中的数值运算。
+ * 【使用示例】
+ * <pre>
+ * double result = Arith.add(0.1, 0.2);        // 0.3（精确）
+ * double avg = Arith.div(10, 3, 2);           // 3.33（保留2位小数）
+ * double rounded = Arith.round(3.14159, 2);   // 3.14（四舍五入）
+ * </pre>
+ * 【原理】内部先将double转为字符串再构造BigDecimal（避免new BigDecimal(0.1)的精度问题），运算后转回double。
  * 
  * @author ruoyi
  */
 public class Arith
 {
 
-    /** 默认除法运算精度 */
+    /** 默认除法运算精度（除不尽时保留10位小数） */
     private static final int DEF_DIV_SCALE = 10;
 
-    /** 这个类不能实例化 */
+    /** 这个类不能实例化（纯静态工具类，私有构造防止new） */
     private Arith()
     {
     }
@@ -85,12 +96,15 @@ public class Arith
             throw new IllegalArgumentException(
                     "The scale must be a positive integer or zero");
         }
+        // 关键：用Double.toString()中转，避免new BigDecimal(0.1)时底层二进制表示导致的精度丢失
         BigDecimal b1 = new BigDecimal(Double.toString(v1));
         BigDecimal b2 = new BigDecimal(Double.toString(v2));
+        // 被除数为0直接返回0，避免除法运算
         if (b1.compareTo(BigDecimal.ZERO) == 0)
         {
             return BigDecimal.ZERO.doubleValue();
         }
+        // RoundingMode.HALF_UP = 四舍五入
         return b1.divide(b2, scale, RoundingMode.HALF_UP).doubleValue();
     }
 
@@ -108,6 +122,7 @@ public class Arith
                     "The scale must be a positive integer or zero");
         }
         BigDecimal b = new BigDecimal(Double.toString(v));
+        // 除以1实现四舍五入取整到指定小数位
         return b.divide(BigDecimal.ONE, scale, RoundingMode.HALF_UP).doubleValue();
     }
 }

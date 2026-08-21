@@ -11,6 +11,14 @@ import com.ruoyi.common.utils.StringUtils;
 
 /**
  * 类型转换器
+ * <p>
+ * 【架构位置】common模块 → core/text，万能类型转换工具（源自Hutool的Convert精简版）。
+ * 【统一设计】所有方法都是"toXxx(Object value, Xxx defaultValue) + toXxx(Object value)"成对重载：
+ * 转换失败或value为null时返回默认值，绝不抛异常——这对从Map/请求参数中取不可信数据极其重要。
+ * 【高频使用】从HttpServletRequest参数、Map查询结果中安全取值：
+ *   Long id = Convert.toLong(map.get("userId"));  // 不用判null、不用try-catch
+ *   Convert.toLongArray("1,2,3")  // 逗号分隔字符串直接转Long数组，删除接口批量ID常用
+ * 【注意】本类方法高度模式化，看懂toStr/toInt/toLong三个其余举一反三即可。
  *
  * @author ruoyi
  */
@@ -241,6 +249,9 @@ public class Convert
      * 转换为int<br>
      * 如果给定的值为空，或者转换失败，返回默认值<br>
      * 转换失败不会报错
+     * <p>
+     * 【典型实现】代表了本类所有toXxx方法的标准套路：
+     * ①null直接返回默认值 ②已是目标类型直接强转 ③Number类型走xxxValue() ④其余先toStr再parse，异常吞掉返回默认值。
      *
      * @param value 被转换的值
      * @param defaultValue 转换错误时的默认值
@@ -334,7 +345,10 @@ public class Convert
     }
 
     /**
-     * 转换为Long数组<br>
+     * 转换为Long数组
+     * <p>
+     * 【高频使用】前端批量删除传"1,2,3"逗号分隔的ID串，Controller接收后 Convert.toLongArray(ids) 一键转数组，
+     * 再交给Service层批量处理。如SysUserController.remove()删除多个用户。
      *
      * @param split 分隔符
      * @param str 被转换的值
@@ -387,6 +401,9 @@ public class Convert
      * 转换为long<br>
      * 如果给定的值为空，或者转换失败，返回默认值<br>
      * 转换失败不会报错
+     * <p>
+     * 【实现细节】用BigDecimal中转而非Long.parseLong，天然支持"1E2"科学计数法和小数字符串（如"100.0"），
+     * 应对前端js大数精度问题传过来的各种数字格式。
      *
      * @param value 被转换的值
      * @param defaultValue 转换错误时的默认值
@@ -974,6 +991,9 @@ public class Convert
 
     /**
      * 数字金额大写转换 先写个完整的然后将如零拾替换成零
+     * <p>
+     * 【使用场景】财务单据导出时把1234.56转成"壹仟贰佰叁拾肆元伍角陆分"格式。
+     * 【实现】用BigDecimal避免double精度丢失（注释里也说明了），分角、元整数部分分别处理后拼接。
      *
      * @param n 数字
      * @return 中文大写数字

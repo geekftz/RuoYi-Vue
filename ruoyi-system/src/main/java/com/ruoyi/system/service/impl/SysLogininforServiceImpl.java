@@ -13,6 +13,10 @@ import com.ruoyi.system.service.ISysLogininforService;
  * 管理用户登录日志（sys_logininfor表），
  * 由 AsyncFactory 异步写入，提供查询、删除、清空、批量删除功能。
  * </p>
+ * 【架构位置】ruoyi-system → service → impl，业务实现层。本类全是「透传式」实现：Service 只做参数传递，
+ * 实际 SQL 由 Mapper XML 执行——这是简单查询类的典型形态。
+ * 【写入方注意】insertLogininfor 不会出现在登录主线程：SysLoginService 把记录动作包装成 TimerTask
+ * 交给 AsyncManager 异步执行，登录接口响应不被数据库写阻塞。
  *
  * @author ruoyi
  */

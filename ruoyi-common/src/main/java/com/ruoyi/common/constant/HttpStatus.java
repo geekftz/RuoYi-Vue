@@ -2,6 +2,13 @@ package com.ruoyi.common.constant;
 
 /**
  * 返回状态码
+ * <p>
+ * 【架构位置】common模块 → constant，统一返回体（AjaxResult/R/TableDataInfo）中code字段的取值定义。
+ * 【前端联动——重要】前端src/utils/request.js的axios响应拦截器硬编码了这些code的处理逻辑：
+ *   200 → 正常返回数据；401 → 弹窗"登录状态已过期"并跳登录页；
+ *   500 → Message.error弹红色错误；601 → Message.warning弹黄色警告；其他 → Notification.error。
+ * 【重点掌握】业务代码只常用三个：SUCCESS(200)、ERROR(500)、WARN(601)。
+ * 601是若依自定义码，用于"不算错误但要提醒用户"的场景（如导入部分失败、删除被占用数据）。
  * 
  * @author ruoyi
  */
@@ -88,7 +95,7 @@ public class HttpStatus
     public static final int NOT_IMPLEMENTED = 501;
 
     /**
-     * 系统警告消息
+     * 系统警告消息（若依自定义601码，前端拦截器收到后弹Message.warning黄色警告而非红色错误）
      */
     public static final int WARN = 601;
 }

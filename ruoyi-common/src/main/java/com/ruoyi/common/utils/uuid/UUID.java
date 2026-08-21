@@ -9,6 +9,14 @@ import com.ruoyi.common.exception.UtilException;
 
 /**
  * 提供通用唯一识别码（universally unique identifier）（UUID）实现
+ * <p>
+ * 【说明】若依自行实现的UUID类（而非使用java.util.UUID），主要改进：
+ * 1. fastUUID()使用ThreadLocalRandom替代SecureRandom，避免多线程下的性能瓶颈
+ * 2. toString(boolean isSimple)支持生成不带横线的32位短格式
+ * 【使用方式】日常开发不直接使用本类，而是通过IdUtils工具类调用：
+ * <pre>
+ * String uuid = IdUtils.fastSimpleUUID(); // 32位无横线UUID，性能最优
+ * </pre>
  *
  * @author ruoyi
  */
@@ -67,6 +75,7 @@ public final class UUID implements java.io.Serializable, Comparable<UUID>
 
     /**
      * 获取类型 4（伪随机生成的）UUID 的静态工厂。
+     * 【与randomUUID()的区别】使用ThreadLocalRandom而非SecureRandom，性能更好，适合高并发场景。
      * 
      * @return 随机生成的 {@code UUID}
      */
@@ -77,6 +86,7 @@ public final class UUID implements java.io.Serializable, Comparable<UUID>
 
     /**
      * 获取类型 4（伪随机生成的）UUID 的静态工厂。 使用加密的强伪随机数生成器生成该 UUID。
+     * 【安全性更高】使用SecureRandom，适合Token、验证码等安全敏感场景。
      * 
      * @return 随机生成的 {@code UUID}
      */

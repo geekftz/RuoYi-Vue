@@ -5,6 +5,12 @@ import com.ruoyi.common.core.domain.entity.SysRole;
 
 /**
  * 角色表 数据层
+ * <p>
+ * 【架构位置】ruoyi-system → mapper，MyBatis 数据访问接口，对应数据库表 sys_role（角色）。
+ * 【负责的数据操作】角色 CRUD、名称/权限字符唯一性校验、按用户ID查角色（登录时权限汇总的数据源之一）、
+ * 按用户ID查已选角色ID列表（用户表单回显）。
+ * 【重点】selectRoleList 支持数据权限：XML 中拼接 ${params.dataScope}，由 DataScopeAspect 动态注入部门过滤条件。
+ * 【调用方】SysRoleServiceImpl / SysUserServiceImpl ← SysRoleController（「系统管理-角色管理」菜单）。
  * 
  * @author ruoyi
  */

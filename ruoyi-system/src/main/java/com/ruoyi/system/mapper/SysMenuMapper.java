@@ -6,6 +6,14 @@ import com.ruoyi.common.core.domain.entity.SysMenu;
 
 /**
  * 菜单表 数据层
+ * <p>
+ * 【架构位置】ruoyi-system → mapper，MyBatis 数据访问接口，对应数据库表 sys_menu（菜单权限，树形）。
+ * 【负责的数据操作】三类核心查询：
+ * 1. 菜单管理 CRUD（「系统管理-菜单管理」菜单，含按角色查已选菜单用于权限分配回显）；
+ * 2. 权限串查询（selectMenuPerms*）：查出 perms 字段（如 system:user:list），登录时汇总进 LoginUser.permissions，
+ *    是 @PreAuthorize("@ss.hasPermi(...)") 校验的数据源；
+ * 3. 路由树查询（selectMenuTreeAll / selectMenuTreeByUserId）：/getRouters 接口的数据源，前端动态注册路由。
+ * 【调用方】SysMenuServiceImpl ← SysMenuController / SysLoginController。
  *
  * @author ruoyi
  */

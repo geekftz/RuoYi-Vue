@@ -6,6 +6,12 @@ import com.ruoyi.common.utils.StringUtils;
 
 /**
  * @author ruoyi 序列生成类
+ * <p>
+ * 【能力】生成带时间戳的业务序列号，格式：yyMMddHHmmss + 机器码 + 递增序号。
+ * 示例："240115143000A001"（2024年1月15日14:30:00 + 机器A + 序号001）
+ * 【使用场景】生成上传文件的唯一文件名、业务单号等需要可读性时间戳+唯一序号的场景。
+ * 【线程安全】内部使用AtomicInteger+synchronized保证多线程下序号不重复。
+ * 【局限】序号达到999后循环重置，单机可用，集群环境需要扩展machineCode区分。
  */
 public class Seq
 {
@@ -15,19 +21,19 @@ public class Seq
     // 上传序列类型
     public static final String uploadSeqType = "UPLOAD";
 
-    // 通用接口序列数
+    // 通用接口序列数（原子计数器，线程安全）
     private static AtomicInteger commSeq = new AtomicInteger(1);
 
     // 上传接口序列数
     private static AtomicInteger uploadSeq = new AtomicInteger(1);
 
-    // 机器标识
+    // 机器标识（集群部署时不同机器应配置不同标识）
     private static final String machineCode = "A";
 
     /**
-     * 获取通用序列号
+     * 获取通用序列号（默认类型COMMON）
      * 
-     * @return 序列值
+     * @return 序列值 如"240115143000A001"
      */
     public static String getId()
     {
@@ -37,7 +43,8 @@ public class Seq
     /**
      * 默认16位序列号 yyMMddHHmmss + 一位机器标识 + 3长度循环递增字符串
      * 
-     * @return 序列值
+     * @param type 序列类型（COMMON/UPLOAD）
+     * @return 序列值 如"240115143000A001"
      */
     public static String getId(String type)
     {
@@ -52,12 +59,13 @@ public class Seq
     /**
      * 通用接口序列号 yyMMddHHmmss + 一位机器标识 + length长度循环递增字符串
      * 
-     * @param atomicInt 序列数
-     * @param length 数值长度
+     * @param atomicInt 序列数（原子计数器）
+     * @param length 数值长度（序号部分占几位）
      * @return 序列值
      */
     public static String getId(AtomicInteger atomicInt, int length)
     {
+        // 拼接：时间戳 + 机器码 + 递增序号
         String result = DateUtils.dateTimeNow();
         result += machineCode;
         result += getSeq(atomicInt, length);
@@ -67,14 +75,14 @@ public class Seq
     /**
      * 序列循环递增字符串[1, 10 的 (length)幂次方), 用0左补齐length位数
      * 
-     * @return 序列值
+     * @return 序列值 如"001"、"002"
      */
     private synchronized static String getSeq(AtomicInteger atomicInt, int length)
     {
-        // 先取值再+1
+        // 先取值再+1（原子操作）
         int value = atomicInt.getAndIncrement();
 
-        // 如果更新后值>=10 的 (length)幂次方则重置为1
+        // 如果更新后值>=10 的 (length)幂次方则重置为1（如3位序号到999后回到1）
         int maxSeq = (int) Math.pow(10, length);
         if (atomicInt.get() >= maxSeq)
         {

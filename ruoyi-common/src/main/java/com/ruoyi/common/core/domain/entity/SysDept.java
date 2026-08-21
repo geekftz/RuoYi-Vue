@@ -12,6 +12,13 @@ import com.ruoyi.common.core.domain.BaseEntity;
 
 /**
  * 部门表 sys_dept
+ * <p>
+ * 【架构位置】common模块 → core/domain/entity，部门实体（Entity），对应sys_dept表。
+ * 【业务角色】部门是若依组织架架构与数据权限的基石：用户挂在部门下（sys_user.dept_id），
+ *             角色的数据范围（本部门/本部门及以下）最终都落到部门树上过滤。
+ * 【树形结构】parentId指父部门、ancestors存祖先链（如"0,1,3"），与TreeEntity同样的设计套路，
+ *             但本类直接继承BaseEntity自行定义树字段（历史原因，效果相同）。
+ * 【前端联动】前端部门管理页是树形表格（el-table的tree-props），新增用户时的部门选择是el-tree-select。
  * 
  * @author ruoyi
  */
@@ -25,7 +32,9 @@ public class SysDept extends BaseEntity
     /** 父部门ID */
     private Long parentId;
 
-    /** 祖级列表 */
+    /** 祖级列表（如"0,1,3"，逗号分隔的祖先ID链）——数据权限核心字段：
+     *  "本部门及以下"数据范围的SQL就是 d.dept_id IN (SELECT dept_id FROM sys_dept WHERE FIND_IN_SET(#{deptId}, ancestors))
+     *  新增/移动部门时Service层会自动重算本节点及全部子孙的ancestors */
     private String ancestors;
 
     /** 部门名称 */
@@ -52,7 +61,7 @@ public class SysDept extends BaseEntity
     /** 父部门名称 */
     private String parentName;
     
-    /** 子部门 */
+    /** 子部门列表（非表字段，buildDeptTree()组装树时填充，供树形表格/树选择器渲染） */
     private List<SysDept> children = new ArrayList<SysDept>();
 
     public Long getDeptId()

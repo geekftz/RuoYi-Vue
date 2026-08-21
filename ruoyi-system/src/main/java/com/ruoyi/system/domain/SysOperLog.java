@@ -8,6 +8,12 @@ import com.ruoyi.common.core.domain.BaseEntity;
 
 /**
  * 操作日志记录表 oper_log
+ * <p>
+ * 【架构位置】ruoyi-system → domain，对应数据库表 sys_oper_log（操作日志）。
+ * 【业务作用】「系统监控-操作日志」菜单的数据载体：记录谁在什么时间调了哪个接口、传了什么参数、成败与耗时。
+ * 【写入链路】Controller 方法上标 @Log(title="xx", businessType=BusinessType.INSERT) → LogAspect 切面拦截
+ * → 异步（AsyncManager）写入本表。全程不影响业务接口响应速度。
+ * 【注意】operParam/jsonResult 会被 LogAspect 按 @Log 的 isSaveRequestData/isSaveResponseData 配置裁剪，且密码等字段会被排除。
  * 
  * @author ruoyi
  */
@@ -19,22 +25,22 @@ public class SysOperLog extends BaseEntity
     @Excel(name = "操作序号", cellType = ColumnType.NUMERIC)
     private Long operId;
 
-    /** 操作模块 */
+    /** 操作模块：取自 @Log(title=) 的值，如「用户管理」 */
     @Excel(name = "操作模块")
     private String title;
 
-    /** 业务类型（0其它 1新增 2修改 3删除） */
+    /** 业务类型（0其它 1新增 2修改 3删除）：取自 @Log(businessType=)，枚举见 BusinessType */
     @Excel(name = "业务类型", readConverterExp = "0=其它,1=新增,2=修改,3=删除,4=授权,5=导出,6=导入,7=强退,8=生成代码,9=清空数据")
     private Integer businessType;
 
-    /** 业务类型数组 */
+    /** 业务类型数组：非表字段！前端列表页按多个类型筛选时接收的查询入参（XML 中用 in 查询） */
     private Integer[] businessTypes;
 
-    /** 请求方法 */
+    /** 请求方法：Java 方法全名（包名.类名.方法名） */
     @Excel(name = "请求方法")
     private String method;
 
-    /** 请求方式 */
+    /** 请求方式：HTTP 动词 GET/POST/PUT/DELETE */
     @Excel(name = "请求方式")
     private String requestMethod;
 
@@ -83,7 +89,7 @@ public class SysOperLog extends BaseEntity
     @Excel(name = "操作时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
     private Date operTime;
 
-    /** 消耗时间 */
+    /** 消耗时间：接口执行毫秒数，LogAspect 用 StopWatch 计算，排查慢接口的第一手数据 */
     @Excel(name = "消耗时间", suffix = "毫秒")
     private Long costTime;
 

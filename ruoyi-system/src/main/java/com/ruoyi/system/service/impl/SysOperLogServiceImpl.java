@@ -13,6 +13,8 @@ import com.ruoyi.system.service.ISysOperLogService;
  * 管理用户操作日志（sys_oper_log表），由 LogAspect 切面通过 AsyncFactory 异步写入，
  * 提供查询、删除、清空功能。
  * </p>
+ * 【架构位置】ruoyi-system → service → impl，业务实现层。本类同样是「透传式」实现。
+ * 【写入链路回顾】Controller 方法标 @Log → LogAspect.doBefore/doAfter 拦截 → AsyncManager 异步调 insertOperlog 落库。
  *
  * @author ruoyi
  */

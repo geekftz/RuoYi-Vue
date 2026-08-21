@@ -8,6 +8,13 @@ import com.ruoyi.system.domain.vo.RouterVo;
 
 /**
  * 菜单 业务层
+ * <p>
+ * 【架构位置】ruoyi-system → service，菜单权限业务接口，实现类 SysMenuServiceImpl（权限体系的核心服务）。
+ * 【业务职责】
+ * 1. 登录后的权限装配：selectRolePermsByUserId / selectMenuPermsByUserId（@PreAuthorize 校验的数据源）；
+ * 2. 动态路由：buildMenus 把菜单树转成前端 vue-router 可用的 RouterVo 树（/getRouters 接口）；
+ * 3. 菜单管理 CRUD 与角色菜单分配回显。
+ * 【调用方】SysMenuController / SysLoginController（getRouters）/ PermissionService。
  * 
  * @author ruoyi
  */

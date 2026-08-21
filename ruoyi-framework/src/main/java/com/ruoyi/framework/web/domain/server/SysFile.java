@@ -2,7 +2,10 @@ package com.ruoyi.framework.web.domain.server;
 
 /**
  * 系统文件相关信息
- * 
+ * <p>
+ * 【架构位置】服务监控VO的子对象，对应前端"服务监控"页的磁盘状态表格（每个盘符一行）。
+ * 容量字段已由 Server.convertFileSize() 格式化为 "xxx GB" 字符串，可直接展示；usage为使用率百分比。
+ *
  * @author ruoyi
  */
 public class SysFile

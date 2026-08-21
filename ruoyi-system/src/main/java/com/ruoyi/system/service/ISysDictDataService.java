@@ -5,6 +5,10 @@ import com.ruoyi.common.core.domain.entity.SysDictData;
 
 /**
  * 字典 业务层
+ * <p>
+ * 【架构位置】ruoyi-system → service，字典数据业务接口，实现类 SysDictDataServiceImpl。
+ * 【业务职责】sys_dict_data 表 CRUD；selectDictDataByType 是前端字典下拉的数据源（走 Redis 缓存）。
+ * 【调用方】SysDictDataController / SysDictTypeController（/system/dict/data/type/xxx 接口）。
  * 
  * @author ruoyi
  */

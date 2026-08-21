@@ -11,6 +11,11 @@ import com.ruoyi.common.core.domain.BaseEntity;
 
 /**
  * 菜单权限表 sys_menu
+ * <p>
+ * 【架构位置】common模块 → core/domain/entity，菜单实体（Entity），对应sys_menu表。
+ * 【业务角色】若依是"菜单驱动前端"的架构：前端登录后调getRouters接口拿到当前用户的菜单树，
+ *             动态生成Vue Router路由和侧边栏，无需在前端硬编码路由。按钮级权限也由本表的perms字段提供。
+ * 【三种类型】M目录（纯分组不跳转）、C菜单（对应一个Vue页面）、F按钮（不显示在侧边栏，只提供权限标识）。
  * 
  * @author ruoyi
  */
@@ -33,10 +38,10 @@ public class SysMenu extends BaseEntity
     /** 显示顺序 */
     private Integer orderNum;
 
-    /** 路由地址 */
+    /** 路由地址（前端Vue Router的path，如"user"；外链时是完整URL） */
     private String path;
 
-    /** 组件路径 */
+    /** 组件路径（前端Vue组件文件相对views目录的路径，如"system/user/index"；getRouters返回后前端动态import加载） */
     private String component;
 
     /** 路由参数 */
@@ -48,19 +53,21 @@ public class SysMenu extends BaseEntity
     /** 是否为外链（0是 1否） */
     private String isFrame;
 
-    /** 是否缓存（0缓存 1不缓存） */
+    /** 是否缓存（0缓存 1不缓存）——对应前端<keep-alive>：缓存的页面切换tab后组件状态保留不重新渲染 */
     private String isCache;
 
-    /** 类型（M目录 C菜单 F按钮） */
+    /** 类型（M目录 C菜单 F按钮）——核心字段：M只用于侧边栏分组；C会生成前端路由和页面；
+     *  F不在侧边栏显示，但其perms参与@PreAuthorize按钮权限校验（前端v-hasPermi指令也用它） */
     private String menuType;
 
-    /** 显示状态（0显示 1隐藏） */
+    /** 显示状态（0显示 1隐藏）——隐藏的菜单不出现在侧边栏，但路由仍可访问（用于详情页等"隐形页面"） */
     private String visible;
 
     /** 菜单状态（0正常 1停用） */
     private String status;
 
-    /** 权限字符串 */
+    /** 权限字符串（如"system:user:list"，约定格式"模块:功能:操作"）——@PreAuthorize("@ss.hasPermi('xxx')")
+     *  校验的正是这个字符串；前端按钮v-hasPermi="['system:user:add']"同样比对它 */
     private String perms;
 
     /** 菜单图标 */

@@ -8,6 +8,11 @@ import com.ruoyi.system.service.ISysUserOnlineService;
 
 /**
  * 在线用户 服务层处理
+ * <p>
+ * 【架构位置】ruoyi-system → service → impl，在线用户业务实现。
+ * 【核心认知】本类没有任何 Mapper 注入——在线用户数据不在数据库，全部来自 Redis 的 login_tokens:* key。
+ * Controller 先用 RedisCache 按前缀扫出 LoginUser 集合，再用本类的 selectOnlineByXxx 在内存中按 IP/账号过滤。
+ * 【数据流】Redis(LoginUser) → loginUserToUserOnline 字段拷贝 → SysUserOnline(VO) → 前端表格。
  * 
  * @author ruoyi
  */
@@ -79,6 +84,7 @@ public class SysUserOnlineServiceImpl implements ISysUserOnlineService
         {
             return null;
         }
+        // 字段搬运：LoginUser(Redis中的登录态) → SysUserOnline(前端展示VO)，注意 dept 可能为空需判空
         SysUserOnline sysUserOnline = new SysUserOnline();
         sysUserOnline.setTokenId(user.getToken());
         sysUserOnline.setUserName(user.getUsername());

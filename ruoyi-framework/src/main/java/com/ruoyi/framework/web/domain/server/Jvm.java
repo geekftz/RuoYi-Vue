@@ -6,7 +6,11 @@ import com.ruoyi.common.utils.DateUtils;
 
 /**
  * JVM相关信息
- * 
+ * <p>
+ * 【架构位置】服务监控VO的子对象，对应前端"服务监控"页的Java虚拟机信息卡片。
+ * 【数据说明】内存字段内部存字节数，getter统一换算为MB（保留2位小数）返回；
+ * 启动时间/运行时长通过 ManagementFactory 运行时MXBean 与 DateUtils 计算得出。
+ *
  * @author ruoyi
  */
 public class Jvm
@@ -113,7 +117,7 @@ public class Jvm
     }
 
     /**
-     * JDK运行时间
+     * JDK运行时间：当前时间 - JVM启动时间，格式化为 "x天x小时x分钟"
      */
     public String getRunTime()
     {
@@ -121,7 +125,7 @@ public class Jvm
     }
 
     /**
-     * 运行参数
+     * 运行参数：JVM启动时的输入参数（如 -Xms -Xmx 等）
      */
     public String getInputArgs()
     {

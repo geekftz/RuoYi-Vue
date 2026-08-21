@@ -6,6 +6,10 @@ import org.springframework.lang.Nullable;
 
 /**
  * 请求方式
+ * <p>
+ * 【使用者】LogAspect记录操作日志时把请求方法字符串转成枚举存入sys_oper_log.request_method列。
+ * 【实现】静态块把所有枚举值注册进Map，resolve()按字符串名查找——比循环values()比对高效。
+ * 源自Spring的HttpMethod精简版（Spring自带的在org.springframework.http包，若依为避免依赖冲突自实现）。
  *
  * @author ruoyi
  */

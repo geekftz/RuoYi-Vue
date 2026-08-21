@@ -34,6 +34,9 @@ import com.ruoyi.system.service.ISysRoleService;
  * - 角色与用户关联管理（sys_user_role表）
  * - 校验角色名称和权限字符唯一性
  * </p>
+ * 【架构位置】业务层 ServiceImpl，对应 SysRoleController（系统管理→角色管理）。
+ * 【业务背景】角色是若依权限体系（RBAC）的核心：用户→角色→菜单（按钮权限）三层关联，
+ * 另外角色还绑定"数据权限"（能看到哪些部门的数据）。本类大量出现"先删关联再批量插"的维护模式。
  *
  * @author ruoyi
  */
@@ -66,6 +69,8 @@ public class SysRoleServiceImpl implements ISysRoleService
     @DataScope(deptAlias = "d")
     public List<SysRole> selectRoleList(SysRole role)
     {
+        // 【注解专项】@DataScope：数据权限过滤。DataScopeAspect 会按当前用户的数据范围
+        // 自动拼接 AND d.dept_id IN (...) 到 SQL 末尾，非管理员只能看到自己权限内的角色
         return roleMapper.selectRoleList(role);
     }
 
@@ -78,8 +83,11 @@ public class SysRoleServiceImpl implements ISysRoleService
     @Override
     public List<SysRole> selectRolesByUserId(Long userId)
     {
+        // ① 查出该用户已拥有的角色
         List<SysRole> userRoles = roleMapper.selectRolePermissionByUserId(userId);
+        // ② 查出全部角色
         List<SysRole> roles = selectRoleAll();
+        // ③ 双重循环打标记：用户已拥有的角色 flag=true，前端用户编辑页据此回显勾选状态
         for (SysRole role : roles)
         {
             for (SysRole userRole : userRoles)
@@ -103,12 +111,16 @@ public class SysRoleServiceImpl implements ISysRoleService
     @Override
     public Set<String> selectRolePermissionByUserId(Long userId)
     {
+        // 查询用户所有角色的 roleKey（权限字符，如 system:user:list）
         List<SysRole> perms = roleMapper.selectRolePermissionByUserId(userId);
         Set<String> permsSet = new HashSet<>();
         for (SysRole perm : perms)
         {
             if (StringUtils.isNotNull(perm))
             {
+                // roleKey 支持逗号分隔多个权限串，拆分后并入 Set（自动去重）
+                // 【调用链路】登录时 SysPermissionService.getRolePermission() 调用此方法，
+                // 结果最终存入 LoginUser.permissions，供 @PreAuthorize("@ss.hasRole('xxx')") 校验
                 permsSet.addAll(Arrays.asList(perm.getRoleKey().trim().split(",")));
             }
         }
@@ -123,6 +135,8 @@ public class SysRoleServiceImpl implements ISysRoleService
     @Override
     public List<SysRole> selectRoleAll()
     {
+        // 通过 AOP 代理调用 selectRoleList，确保 @DataScope 数据权限切面生效
+        // （同类内直接 this 调用会绕过代理，是 Spring AOP 的经典坑，SysDeptServiceImpl 同理）
         return SpringUtils.getAopProxy(this).selectRoleList(new SysRole());
     }
 
@@ -194,6 +208,7 @@ public class SysRoleServiceImpl implements ISysRoleService
     @Override
     public void checkRoleAllowed(SysRole role)
     {
+        // 保护内置超管角色（roleId=1）：isAdmin() 判断 roleId 是否为 1，是则禁止任何修改/删除操作
         if (StringUtils.isNotNull(role.getRoleId()) && role.isAdmin())
         {
             throw new ServiceException("不允许操作超级管理员角色");
@@ -214,6 +229,7 @@ public class SysRoleServiceImpl implements ISysRoleService
             {
                 SysRole role = new SysRole();
                 role.setRoleId(roleId);
+                // 用带数据权限的列表查询验证：查得到说明在权限范围内，查不到则越权
                 List<SysRole> roles = SpringUtils.getAopProxy(this).selectRoleList(role);
                 if (StringUtils.isEmpty(roles))
                 {
@@ -245,8 +261,10 @@ public class SysRoleServiceImpl implements ISysRoleService
     @Transactional
     public int insertRole(SysRole role)
     {
+        // 【事务范围】角色主表 + 角色菜单关联表两步写入，任一失败整体回滚
         // 新增角色信息
         roleMapper.insertRole(role);
+        // insert 后 MyBatis 通过 useGeneratedKeys 把自增主键回填到 role.roleId，供下面关联使用
         return insertRoleMenu(role);
     }
 
@@ -260,9 +278,12 @@ public class SysRoleServiceImpl implements ISysRoleService
     @Transactional
     public int updateRole(SysRole role)
     {
+        // 【事务范围】"更新主表 + 删旧关联 + 插新关联"三步必须同生共死
         // 修改角色信息
         roleMapper.updateRole(role);
         // 删除角色与菜单关联
+        // 【若依高频用法】多对多关联维护的经典模式：先删后插。
+        // 比对差异更新复杂易错，直接全删重建简单可靠，关联表数据量小性能可接受
         roleMenuMapper.deleteRoleMenuByRoleId(role.getRoleId());
         return insertRoleMenu(role);
     }
@@ -289,11 +310,13 @@ public class SysRoleServiceImpl implements ISysRoleService
     @Transactional
     public int authDataScope(SysRole role)
     {
-        // 修改角色信息
+        // 【事务范围】更新角色数据范围字段 + 重建角色部门关联，同一事务
+        // 修改角色信息（主要是 dataScope 字段：1全部 2自定义 3本部门 4本部门及以下 5仅本人）
         roleMapper.updateRole(role);
         // 删除角色与部门关联
         roleDeptMapper.deleteRoleDeptByRoleId(role.getRoleId());
         // 新增角色和部门信息（数据权限）
+        // dataScope=2（自定义）时，前端勾选哪些部门，这里就批量插入哪些 deptId
         return insertRoleDept(role);
     }
 
@@ -306,6 +329,7 @@ public class SysRoleServiceImpl implements ISysRoleService
     {
         int rows = 1;
         // 新增用户与角色管理
+        // 把前端勾选的菜单ID数组组装成关联实体列表
         List<SysRoleMenu> list = new ArrayList<SysRoleMenu>();
         for (Long menuId : role.getMenuIds())
         {
@@ -316,6 +340,7 @@ public class SysRoleServiceImpl implements ISysRoleService
         }
         if (list.size() > 0)
         {
+            // 批量插入（XML 中 foreach 拼接 values），一条 SQL 完成，避免循环单插的性能问题
             rows = roleMenuMapper.batchRoleMenu(list);
         }
         return rows;
@@ -372,11 +397,15 @@ public class SysRoleServiceImpl implements ISysRoleService
     @Transactional
     public int deleteRoleByIds(Long[] roleIds)
     {
+        // 【事务范围】批量删除前先逐个做三项校验，任何一个不通过抛异常回滚，保证不会"删一半"
         for (Long roleId : roleIds)
         {
+            // ① 不能删超管角色
             checkRoleAllowed(new SysRole(roleId));
+            // ② 不能删超出自己数据权限的角色
             checkRoleDataScope(roleId);
             SysRole role = selectRoleById(roleId);
+            // ③ 已分配给用户的角色不能删
             if (countUserRoleByRoleId(roleId) > 0)
             {
                 throw new ServiceException(String.format("%1$s已分配,不能删除", role.getRoleName()));
@@ -386,6 +415,7 @@ public class SysRoleServiceImpl implements ISysRoleService
         roleMenuMapper.deleteRoleMenu(roleIds);
         // 删除角色与部门关联
         roleDeptMapper.deleteRoleDept(roleIds);
+        // 最后删角色主表（先删外键关联再删主表，避免脏关联数据）
         return roleMapper.deleteRoleByIds(roleIds);
     }
 

@@ -5,6 +5,11 @@ import com.ruoyi.common.core.domain.entity.SysDictType;
 
 /**
  * 字典表 数据层
+ * <p>
+ * 【架构位置】ruoyi-system → mapper，MyBatis 数据访问接口，对应数据库表 sys_dict_type（字典类型，字典的「目录」）。
+ * 【负责的数据操作】字典类型 CRUD：分页列表、全量列表（前端字典管理页）、按ID/按类型名查询、唯一性校验。
+ * 【表关系】sys_dict_type(1) ── (n)sys_dict_data：类型表存「sys_user_sex」这类标识，数据表存具体键值对。
+ * 【调用方】SysDictTypeServiceImpl ← SysDictTypeController（「系统管理-字典管理」菜单）。
  * 
  * @author ruoyi
  */

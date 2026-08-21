@@ -5,6 +5,11 @@ import com.ruoyi.system.domain.SysRoleDept;
 
 /**
  * 角色与部门关联表 数据层
+ * <p>
+ * 【架构位置】ruoyi-system → mapper，MyBatis 数据访问接口，对应数据库表 sys_role_dept（角色-部门关联，数据权限基础）。
+ * 【负责的数据操作】关联记录的增删与统计：删除角色时清理关联、修改角色数据权限时先删后插（batchRoleDept）、
+ * 删除部门前检查是否被角色引用（selectCountRoleDeptByDeptId）。
+ * 【调用方】SysRoleServiceImpl / SysDeptServiceImpl。
  * 
  * @author ruoyi
  */

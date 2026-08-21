@@ -9,6 +9,18 @@ import java.util.Set;
 
 /**
  * 登录用户身份权限
+ * <p>
+ * 【架构位置】common模块 → core/domain/model，贯穿全站的"登录态载体"。
+ * 【核心职责】封装当前登录用户的全部身份信息：用户ID、部门ID、Token、登录时间、过期时间、
+ *             登录IP/地点/浏览器/操作系统、权限集合、SysUser用户详情。
+ * 【调用链路】登录成功后由TokenService.createToken()创建本对象 → 存入Redis（key=login_tokens:token）→
+ *             之后每次请求JwtAuthenticationTokenFilter从Redis取出本对象 → 存入SecurityContextHolder →
+ *             业务代码通过SecurityUtils.getLoginUser()随时取出使用。
+ * 【为什么实现UserDetails】Spring Security的Authentication体系要求principal（当事人）是UserDetails类型，
+ *             若依把LoginUser作为principal塞进UsernamePasswordAuthenticationToken，
+ *             这样SecurityContextHolder里存的就是LoginUser，SecurityUtils才能直接强转取出。
+ * 【前端联动】本对象的permissions就是前端v-hasPermi指令和路由守卫做按钮/菜单权限判断的数据来源
+ *             （前端从getInfo接口拿到permissions数组）。
  * 
  * @author ruoyi
  */
@@ -28,6 +40,11 @@ public class LoginUser implements UserDetails
 
     /**
      * 用户唯一标识
+     * <p>
+     * 【重点掌握】这个token不是JWT本身，而是UUID随机串，它是Redis中登录信息的key后缀：
+     * 完整Redis key = "login_tokens:" + 本token值。
+     * 前端请求头Authorization: Bearer xxx 中的xxx是JWT，JWT解开后里面的login_user_key才是本token。
+     * 【双重设计原因】JWT负责"防篡改传输"，Redis负责"可主动失效"——改密码/踢人下线时直接删Redis即可让Token立即失效。
      */
     private String token;
 
@@ -63,6 +80,11 @@ public class LoginUser implements UserDetails
 
     /**
      * 权限列表
+     * <p>
+     * 【内容】形如 ["system:user:list","system:user:add",...] 的权限字符串集合，登录时由SysPermissionService查库组装。
+     * 【使用场景】@PreAuthorize("@ss.hasPermi('system:user:list')") 校验时就是在这个Set里做contains匹配；
+     * 超管admin的Set里只有一个"*:*:*"通配符，匹配一切。
+     * 【前端联动】前端getInfo接口返回的permissions字段即此集合，用于按钮级权限控制v-hasPermi。
      */
     private Set<String> permissions;
 
@@ -119,6 +141,13 @@ public class LoginUser implements UserDetails
         this.token = token;
     }
 
+    /**
+     * 获取用户密码（来自内部SysUser）
+     * <p>
+     * 【注解专项】@JSONField(serialize = false)：fastjson2序列化时跳过此字段。
+     * 因为LoginUser整体要序列化存入Redis，密码（哪怕是BCrypt密文）也不该进缓存，防止泄露。
+     * 【注意】这里用的是fastjson2的注解而非Jackson的，因为若依Redis序列化器用的是fastjson2。
+     */
     @JSONField(serialize = false)
     @Override
     public String getPassword()
@@ -134,6 +163,12 @@ public class LoginUser implements UserDetails
 
     /**
      * 账户是否未过期,过期无法验证
+     * <p>
+     * 【为何恒返回true】这是Spring Security的UserDetails接口约定方法，但若依不使用Spring Security自带的
+     * 账号过期/锁定/禁用校验体系，而是在SysLoginService.login()里用自己的逻辑校验
+     * （查sys_user表的status、del_flag字段，抛自定义异常）。所以这里四个状态方法全部返回true，
+     * 相当于告诉Spring Security"这些检查我自己做过了，你别管"。
+     * @JSONField(serialize = false)同理：这些Spring Security契约字段无需存入Redis。
      */
     @JSONField(serialize = false)
     @Override
@@ -258,6 +293,13 @@ public class LoginUser implements UserDetails
         this.user = user;
     }
 
+    /**
+     * 获取Spring Security标准的权限列表
+     * <p>
+     * 【为何返回null】Spring Security标准做法是把权限包装成GrantedAuthority对象集合返回，
+     * 但若依没有使用这套体系，而是用自己设计的Set<String> permissions + @ss.hasPermi()做权限判断。
+     * 此方法仅为满足UserDetails接口必须实现的要求，直接返回null即可，若依代码全程不调用它。
+     */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities()
     {

@@ -2,6 +2,9 @@ package com.ruoyi.common.enums;
 
 /**
  * 用户状态
+ * <p>
+ * 【使用者】SysLoginService.login()登录校验时用它比对sys_user.status/del_flag：
+ * status=1停用抛"账号已停用"、del_flag=2抛"账号已删除"。枚举双字段(code数据库值+info显示文案)是若依标准写法。
  * 
  * @author ruoyi
  */

@@ -17,6 +17,10 @@ import com.ruoyi.system.service.ISysPostService;
  * 管理系统岗位（sys_post表），包括 CRUD 操作。
  * 删除岗位时检查是否被用户关联。
  * </p>
+ * 【架构位置】ruoyi-system → service → impl，业务实现层。
+ * 【本类可学的两个若依套路】
+ * 1. 唯一性校验套路：先按名称/编码查出已有记录，若存在且 ID 不是自己的（新增时用 -1L 占位），则判定不唯一；
+ * 2. 删除前占用检查：先统计中间表引用数，>0 则抛 ServiceException，由全局异常处理器转成友好提示返回前端。
  *
  * @author ruoyi
  */
@@ -87,7 +91,9 @@ public class SysPostServiceImpl implements ISysPostService
     @Override
     public boolean checkPostNameUnique(SysPost post)
     {
+        // 【唯一性校验套路】新增时 postId 为 null，用 -1L 占位；编辑时传真实 ID
         Long postId = StringUtils.isNull(post.getPostId()) ? -1L : post.getPostId();
+        // 按名称查库：查到了且不是「自己」→ 名字被别人占了，返回不唯一
         SysPost info = postMapper.checkPostNameUnique(post.getPostName());
         if (StringUtils.isNotNull(info) && info.getPostId().longValue() != postId.longValue())
         {
@@ -147,11 +153,13 @@ public class SysPostServiceImpl implements ISysPostService
     @Override
     public int deletePostByIds(Long[] postIds)
     {
+        // 【删除前校验】逐个检查岗位是否已被用户占用（sys_user_post 中间表有记录则禁止删除）
         for (Long postId : postIds)
         {
             SysPost post = selectPostById(postId);
             if (countUserPostById(postId) > 0)
             {
+                // 抛业务异常，GlobalExceptionHandler 会加工成 AjaxResult.error(msg) 返回前端弹窗提示
                 throw new ServiceException(String.format("%1$s已分配,不能删除", post.getPostName()));
             }
         }

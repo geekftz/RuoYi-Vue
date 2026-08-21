@@ -11,8 +11,21 @@ import com.ruoyi.common.constant.Constants;
 import com.ruoyi.common.core.text.StrFormatter;
 
 /**
- * 字符串工具类
- * 
+ * 字符串工具类（若依最高频工具）
+ * <p>
+ * 【架构位置】ruoyi-common / utils层 —— 继承 Apache Commons Lang3 的 StringUtils，在其上扩充若依定制方法。
+ * 因此本类同时拥有 commons-lang3 的全部静态方法（isBlank/join/substring...）和下列若依扩展。
+ * <p>
+ * 【若依扩展方法速查】
+ * · nvl(value, def)            空值兜底，等价于前端的 value ?? def；
+ * · isEmpty/isNotEmpty          重载支持 String/Collection/Map/数组，全项目判空统一入口；
+ * · format("{}占位", args)      日志与提示语拼接（比String.format性能好）；
+ * · toUnderScoreCase           驼峰转下划线（实体字段→数据库列名时用）；
+ * · toCamelCase/convertToCamelCase 下划线转驼峰（代码生成器用）；
+ * · isMatch/matches            Ant风格URL匹配（/** 多级、/* 单级），数据权限/匿名URL放行用；
+ * · hide                       字符串区间打码（手机号脱敏场景）；
+ * · padl                       数字左补0（生成编号用）。
+ *
  * @author ruoyi
  */
 public class StringUtils extends org.apache.commons.lang3.StringUtils
@@ -344,6 +357,8 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils
      * 通常使用：format("this is {} for {}", "a", "b") -> this is a for b<br>
      * 转义{}： format("this is \\{} for {}", "a", "b") -> this is \{} for a<br>
      * 转义\： format("this is \\\\{} for {}", "a", "b") -> this is \a for b<br>
+     * <p>
+     * 【若依高频用法】StringUtils.format("请求访问：{}，认证失败...", uri)；底层 StrFormatter 实现，线程安全
      * 
      * @param template 文本模板，被替换的部分用 {} 表示
      * @param params 参数值
@@ -650,14 +665,16 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils
     }
 
     /**
-     * 判断url是否与规则配置: 
-     * ? 表示单个字符; 
-     * * 表示一层路径内的任意字符串，不可跨层级; 
+     * 判断url是否与规则配置（Spring AntPathMatcher 路径匹配，与Spring Security的antMatchers同一套规则）:
+     * ? 表示单个字符;
+     * * 表示一层路径内的任意字符串，不可跨层级;
      * ** 表示任意层路径;
+     * <p>
+     * 使用示例：isMatch("/system/**", "/system/user/list") → true
      * 
      * @param pattern 匹配规则
      * @param url 需要匹配的url
-     * @return
+     * @return 是否匹配
      */
     public static boolean isMatch(String pattern, String url)
     {

@@ -5,6 +5,10 @@ import com.ruoyi.system.domain.SysNotice;
 
 /**
  * 公告 服务层
+ * <p>
+ * 【架构位置】ruoyi-system → service，通知公告业务接口，实现类 SysNoticeServiceImpl。
+ * 【业务职责】公告 CRUD；删除公告时联动清理 sys_notice_read 已读记录。
+ * 【调用方】SysNoticeController（「系统管理-通知公告」菜单）。
  * 
  * @author ruoyi
  */

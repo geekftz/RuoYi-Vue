@@ -8,6 +8,15 @@ import com.ruoyi.common.utils.StringUtils;
 
 /**
  * 获取IP方法
+ * <p>
+ * 【架构位置】common/utils/ip，IP地址处理核心工具类。
+ * 【核心方法】
+ * - getIpAddr()：获取客户端真实IP（穿透Nginx/Apache等反向代理，全系统登录日志、操作日志必用）
+ * - getHostIp()：获取服务器本机IP
+ * - internalIp(ip)：判断是否为内网IP
+ * - isMatchedIp(filter, ip)：IP白名单/黑名单匹配（支持精确IP、通配符、网段三种格式）
+ * 【获取客户端IP原理】依次检查 X-Forwarded-For → Proxy-Client-IP → WL-Proxy-Client-IP → X-Real-IP → getRemoteAddr()，
+ * 因为请求经过反向代理后getRemoteAddr()拿到的是代理服务器IP而非真实客户端IP，必须从代理头中提取。
  * 
  * @author ruoyi
  */
@@ -21,7 +30,8 @@ public class IpUtils
     public final static String REGX_IP_SEG = "(" + REGX_IP + "\\-" + REGX_IP + ")";
 
     /**
-     * 获取客户端IP
+     * 获取客户端IP（无参便捷版，自动从当前请求上下文取request）
+     * 【若依高频用法】登录日志、操作日志中记录用户IP：IpUtils.getIpAddr()
      * 
      * @return IP地址
      */
@@ -31,7 +41,9 @@ public class IpUtils
     }
 
     /**
-     * 获取客户端IP
+     * 获取客户端IP（核心方法，穿透反向代理获取真实IP）
+     * 【原理】请求经过Nginx等反向代理后，request.getRemoteAddr()拿到的是代理IP，
+     * 真实客户端IP被代理放在X-Forwarded-For等HTTP头中，需要逐级检查。
      * 
      * @param request 请求对象
      * @return IP地址
@@ -42,6 +54,7 @@ public class IpUtils
         {
             return "unknown";
         }
+        // 依次尝试多个代理头，取第一个非空的（X-Forwarded-For最常见）
         String ip = request.getHeader("x-forwarded-for");
         if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip))
         {
@@ -60,11 +73,13 @@ public class IpUtils
             ip = request.getHeader("X-Real-IP");
         }
 
+        // 所有代理头都没有时，用TCP连接的远端地址（直连场景）
         if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip))
         {
             ip = request.getRemoteAddr();
         }
 
+        // IPv6本地回环地址转为IPv4格式；多级代理时取第一个有效IP
         return "0:0:0:0:0:0:0:1".equals(ip) ? "127.0.0.1" : getMultistageReverseProxyIp(ip);
     }
 
@@ -350,6 +365,12 @@ public class IpUtils
 
     /**
      * 校验ip是否符合过滤串规则
+     * 【使用场景】系统参数中的IP黑名单/白名单校验（如sys.login.blackIPList配置）
+     * 【支持三种格式】
+     * 1. 精确IP："192.168.1.100"
+     * 2. 通配符："192.168.1.*"
+     * 3. IP网段："10.10.10.1-10.10.10.99"
+     * 多个规则用分号分隔："192.168.1.100;10.10.10.*;172.16.1.1-172.16.1.99"
      * 
      * @param filter 过滤IP列表,支持后缀'*'通配,支持网段如:`10.10.10.1-10.10.10.99`
      * @param ip 校验IP地址

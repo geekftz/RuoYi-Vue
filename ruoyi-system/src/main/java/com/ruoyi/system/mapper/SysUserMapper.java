@@ -7,6 +7,16 @@ import com.ruoyi.common.core.domain.entity.SysUser;
 
 /**
  * 用户表 数据层
+ * <p>
+ * 【架构位置】ruoyi-system → mapper，MyBatis 数据访问接口，对应数据库表 sys_user（系统用户，最核心表之一）。
+ * 【负责的数据操作】
+ * 1. 用户 CRUD 与唯一性校验（账号/手机号/邮箱）；
+ * 2. 登录链路：selectUserByUserName（登录认证）、updateLoginInfo（登录成功回写 IP/时间）；
+ * 3. 角色分配场景：selectAllocatedList/selectUnallocatedList（角色详情页已分配/未分配用户列表）；
+ * 4. 单字段更新：头像、状态、密码重置。
+ * 【重点】selectUserList 支持数据权限：XML 拼接 ${params.dataScope}，DataScopeAspect 按当前用户角色注入部门过滤条件。
+ * 【删除方式】逻辑删除（del_flag 置 2），物理数据保留。
+ * 【调用方】SysUserServiceImpl ← SysUserController / SysProfileController / 登录认证链路。
  * 
  * @author ruoyi
  */

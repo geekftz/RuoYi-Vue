@@ -4,6 +4,12 @@ import com.ruoyi.common.utils.StringUtils;
 
 /**
  * 字符串格式化
+ * <p>
+ * 【架构位置】common模块 → core/text，提供SLF4J风格的"{}"占位符格式化。
+ * 【为何不直接用String.format】String.format走正则和Locale处理，性能差且对"%"敏感；
+ * 本类是SLF4J的MessageFormatter简化版，按顺序替换{}，性能高，与日志框架风格统一。
+ * 【使用场景】StringUtils.format()底层就调它，项目中拼日志、拼提示语：
+ * StringUtils.format("新增用户'{}'失败", userName) —— 比字符串+拼接更可读。
  * 
  * @author ruoyi
  */
@@ -22,6 +28,9 @@ public class StrFormatter
      * 通常使用：format("this is {} for {}", "a", "b") -> this is a for b<br>
      * 转义{}： format("this is \\{} for {}", "a", "b") -> this is \{} for a<br>
      * 转义\： format("this is \\\\{} for {}", "a", "b") -> this is \a for b<br>
+     * <p>
+     * 【实现思路】单遍扫描模板：每次indexOf找下一个"{}"，把模板段+参数值依次append进StringBuilder；
+     * 遇到\{}说明占位符被转义（输出字面量{}且参数索引回退argIndex--）；遇到\\{}说明转义符本身被转义（占位符仍生效）。
      * 
      * @param strPattern 字符串模板
      * @param argArray 参数列表

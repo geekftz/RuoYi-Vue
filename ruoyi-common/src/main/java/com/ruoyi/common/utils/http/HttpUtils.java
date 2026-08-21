@@ -25,6 +25,16 @@ import org.springframework.http.MediaType;
 
 /**
  * 通用http发送方法
+ * <p>
+ * 【能力】后端主动向外部URL发送HTTP GET/POST请求（作为HTTP客户端调用第三方接口）。
+ * 【使用场景】调用外部API（如获取IP归属地、调用第三方通知接口等）。
+ * 【方法速查】
+ * - sendGet(url)：发送GET请求
+ * - sendGet(url, param)：发送带参数的GET请求
+ * - sendPost(url, param)：发送POST请求（表单格式）
+ * - sendSSLPost(url, param)：发送HTTPS POST请求（信任所有证书）
+ * 【注意】基于Java原生URLConnection实现，未使用连接池，高并发场景建议换用OkHttp或HttpClient。
+ * sendSSLPost信任所有SSL证书，仅适合内网或测试环境，生产环境应配置正式证书信任链。
  * 
  * @author ruoyi
  */
@@ -265,11 +275,13 @@ public class HttpUtils
 
     private static class TrustAnyTrustManager implements X509TrustManager
     {
+        // 信任所有客户端证书（空实现 = 不校验）
         @Override
         public void checkClientTrusted(X509Certificate[] chain, String authType)
         {
         }
 
+        // 信任所有服务端证书（空实现 = 不校验，绕过SSL证书验证）
         @Override
         public void checkServerTrusted(X509Certificate[] chain, String authType)
         {
@@ -282,6 +294,7 @@ public class HttpUtils
         }
     }
 
+    // 信任所有主机名（不校验HTTPS域名与证书是否匹配）
     private static class TrustAnyHostnameVerifier implements HostnameVerifier
     {
         @Override
